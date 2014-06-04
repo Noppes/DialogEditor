@@ -4,6 +4,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
@@ -12,15 +15,21 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileFilter;
 
+import noppes.dialog.DialogEditor;
+import noppes.dialog.nbt.CompressedStreamTools;
+import noppes.dialog.nbt.NBTTagCompound;
+
 public class GuiMenuBar extends JMenuBar implements ActionListener{
 	private JMenuItem itemLoad;
 	private JMenuItem itemSave;
 	private JMenuItem itemSaveAs;
 	private JMenuItem itemExit;
+	private DialogEditor editor;
 	
 	final JFileChooser fileChooser = new JFileChooser();
 	
-	public GuiMenuBar(){
+	public GuiMenuBar(DialogEditor editor){
+		this.editor = editor;
 		JMenu menu = new JMenu("File");
 		menu.setMnemonic(KeyEvent.VK_F);
 		add(menu);
@@ -68,7 +77,7 @@ public class GuiMenuBar extends JMenuBar implements ActionListener{
             
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                System.out.println(file.getAbsolutePath());
+            	editor.load(file);
             } else {
             	
             }
