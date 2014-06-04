@@ -48,12 +48,4 @@ public class DialogOption {
 			return null;
 		return DialogController.instance.dialogs.get(dialogId);
 	}
-
-	public boolean isAvailable(EntityPlayer player) {
-		Dialog dialog = getDialog();
-		if(dialog == null)
-			return false;
-		
-		return dialog.availability.isAvailable(player);
-	}
 }

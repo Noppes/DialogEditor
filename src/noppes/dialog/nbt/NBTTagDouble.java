@@ -4,20 +4,19 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public class NBTTagDouble extends NBTBase
+public class NBTTagDouble extends NBTBase.NBTPrimitive
 {
-    /** The double value for the tag. */
-    public double data;
+    /**
+     * The double value for the tag.
+     */
+    private double data;
+    private static final String __OBFID = "CL_00001218";
 
-    public NBTTagDouble(String par1Str)
-    {
-        super(par1Str);
-    }
+    NBTTagDouble() {}
 
-    public NBTTagDouble(String par1Str, double par2)
+    public NBTTagDouble(double p_i45130_1_)
     {
-        super(par1Str);
-        this.data = par2;
+        this.data = p_i45130_1_;
     }
 
     /**
@@ -46,7 +45,7 @@ public class NBTTagDouble extends NBTBase
 
     public String toString()
     {
-        return "" + this.data;
+        return "" + this.data + "d";
     }
 
     /**
@@ -54,7 +53,7 @@ public class NBTTagDouble extends NBTBase
      */
     public NBTBase copy()
     {
-        return new NBTTagDouble(this.getName(), this.data);
+        return new NBTTagDouble(this.data);
     }
 
     public boolean equals(Object par1Obj)
@@ -74,5 +73,41 @@ public class NBTTagDouble extends NBTBase
     {
         long i = Double.doubleToLongBits(this.data);
         return super.hashCode() ^ (int)(i ^ i >>> 32);
+    }
+
+    public long func_150291_c()
+    {
+        return (long)Math.floor(this.data);
+    }
+
+    public int func_150287_d()
+    {
+        return floor_double(this.data);
+    }
+    
+    public int floor_double(double par0)
+    {
+        int i = (int)par0;
+        return par0 < (double)i ? i - 1 : i;
+    }
+
+    public short func_150289_e()
+    {
+        return (short)(floor_double(this.data) & 65535);
+    }
+
+    public byte func_150290_f()
+    {
+        return (byte)(floor_double(this.data) & 255);
+    }
+
+    public double func_150286_g()
+    {
+        return this.data;
+    }
+
+    public float func_150288_h()
+    {
+        return (float)this.data;
     }
 }

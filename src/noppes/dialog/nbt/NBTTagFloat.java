@@ -4,20 +4,19 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public class NBTTagFloat extends NBTBase
+public class NBTTagFloat extends NBTBase.NBTPrimitive
 {
-    /** The float value for the tag. */
-    public float data;
+    /**
+     * The float value for the tag.
+     */
+    private float data;
+    private static final String __OBFID = "CL_00001220";
 
-    public NBTTagFloat(String par1Str)
-    {
-        super(par1Str);
-    }
+    NBTTagFloat() {}
 
-    public NBTTagFloat(String par1Str, float par2)
+    public NBTTagFloat(float p_i45131_1_)
     {
-        super(par1Str);
-        this.data = par2;
+        this.data = p_i45131_1_;
     }
 
     /**
@@ -46,7 +45,7 @@ public class NBTTagFloat extends NBTBase
 
     public String toString()
     {
-        return "" + this.data;
+        return "" + this.data + "f";
     }
 
     /**
@@ -54,7 +53,7 @@ public class NBTTagFloat extends NBTBase
      */
     public NBTBase copy()
     {
-        return new NBTTagFloat(this.getName(), this.data);
+        return new NBTTagFloat(this.data);
     }
 
     public boolean equals(Object par1Obj)
@@ -73,5 +72,41 @@ public class NBTTagFloat extends NBTBase
     public int hashCode()
     {
         return super.hashCode() ^ Float.floatToIntBits(this.data);
+    }
+
+    public long func_150291_c()
+    {
+        return (long)this.data;
+    }
+
+    public int func_150287_d()
+    {
+        return floor_float(this.data);
+    }
+
+    public short func_150289_e()
+    {
+        return (short)(floor_float(this.data) & 65535);
+    }
+
+    public byte func_150290_f()
+    {
+        return (byte)(floor_float(this.data) & 255);
+    }
+    
+    public int floor_float(float par0)
+    {
+        int i = (int)par0;
+        return par0 < (float)i ? i - 1 : i;
+    }
+
+    public double func_150286_g()
+    {
+        return (double)this.data;
+    }
+
+    public float func_150288_h()
+    {
+        return this.data;
     }
 }

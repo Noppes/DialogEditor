@@ -3,10 +3,11 @@ package noppes.dialog.nbt;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
 
 public class NBTTagCompound extends NBTBase
 {
@@ -14,28 +15,20 @@ public class NBTTagCompound extends NBTBase
      * The key-value pairs for the tag. Each key is a UTF string, each value is a tag.
      */
     private Map tagMap = new HashMap();
-
-    public NBTTagCompound()
-    {
-        super("");
-    }
-
-    public NBTTagCompound(String par1Str)
-    {
-        super(par1Str);
-    }
+    private static final String __OBFID = "CL_00001215";
 
     /**
      * Write the actual data contents of the tag, implemented in NBT extension classes
      */
     void write(DataOutput par1DataOutput) throws IOException
     {
-        Iterator iterator = this.tagMap.values().iterator();
+        Iterator iterator = this.tagMap.keySet().iterator();
 
         while (iterator.hasNext())
         {
-            NBTBase nbtbase = (NBTBase)iterator.next();
-            NBTBase.writeNamedTag(nbtbase, par1DataOutput);
+            String s = (String)iterator.next();
+            NBTBase nbtbase = (NBTBase)this.tagMap.get(s);
+            func_150298_a(s, nbtbase, par1DataOutput);
         }
 
         par1DataOutput.writeByte(0);
@@ -53,21 +46,20 @@ public class NBTTagCompound extends NBTBase
         else
         {
             this.tagMap.clear();
-            NBTBase nbtbase;
+            byte b0;
 
-            while ((nbtbase = NBTBase.func_130104_b(par1DataInput, par2 + 1)).getId() != 0)
+            while ((b0 = func_150300_a(par1DataInput)) != 0)
             {
-                this.tagMap.put(nbtbase.getName(), nbtbase);
+                String s = func_150294_b(par1DataInput);
+                NBTBase nbtbase = func_150293_a(b0, s, par1DataInput, par2 + 1);
+                this.tagMap.put(s, nbtbase);
             }
         }
     }
 
-    /**
-     * Returns all the values in the tagMap HashMap.
-     */
-    public Collection getTags()
+    public Set func_150296_c()
     {
-        return this.tagMap.values();
+        return this.tagMap.keySet();
     }
 
     /**
@@ -83,7 +75,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setTag(String par1Str, NBTBase par2NBTBase)
     {
-        this.tagMap.put(par1Str, par2NBTBase.setName(par1Str));
+        this.tagMap.put(par1Str, par2NBTBase);
     }
 
     /**
@@ -91,7 +83,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setByte(String par1Str, byte par2)
     {
-        this.tagMap.put(par1Str, new NBTTagByte(par1Str, par2));
+        this.tagMap.put(par1Str, new NBTTagByte(par2));
     }
 
     /**
@@ -99,7 +91,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setShort(String par1Str, short par2)
     {
-        this.tagMap.put(par1Str, new NBTTagShort(par1Str, par2));
+        this.tagMap.put(par1Str, new NBTTagShort(par2));
     }
 
     /**
@@ -107,7 +99,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setInteger(String par1Str, int par2)
     {
-        this.tagMap.put(par1Str, new NBTTagInt(par1Str, par2));
+        this.tagMap.put(par1Str, new NBTTagInt(par2));
     }
 
     /**
@@ -115,7 +107,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setLong(String par1Str, long par2)
     {
-        this.tagMap.put(par1Str, new NBTTagLong(par1Str, par2));
+        this.tagMap.put(par1Str, new NBTTagLong(par2));
     }
 
     /**
@@ -123,7 +115,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setFloat(String par1Str, float par2)
     {
-        this.tagMap.put(par1Str, new NBTTagFloat(par1Str, par2));
+        this.tagMap.put(par1Str, new NBTTagFloat(par2));
     }
 
     /**
@@ -131,7 +123,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setDouble(String par1Str, double par2)
     {
-        this.tagMap.put(par1Str, new NBTTagDouble(par1Str, par2));
+        this.tagMap.put(par1Str, new NBTTagDouble(par2));
     }
 
     /**
@@ -139,7 +131,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setString(String par1Str, String par2Str)
     {
-        this.tagMap.put(par1Str, new NBTTagString(par1Str, par2Str));
+        this.tagMap.put(par1Str, new NBTTagString(par2Str));
     }
 
     /**
@@ -147,7 +139,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setByteArray(String par1Str, byte[] par2ArrayOfByte)
     {
-        this.tagMap.put(par1Str, new NBTTagByteArray(par1Str, par2ArrayOfByte));
+        this.tagMap.put(par1Str, new NBTTagByteArray(par2ArrayOfByte));
     }
 
     /**
@@ -155,15 +147,7 @@ public class NBTTagCompound extends NBTBase
      */
     public void setIntArray(String par1Str, int[] par2ArrayOfInteger)
     {
-        this.tagMap.put(par1Str, new NBTTagIntArray(par1Str, par2ArrayOfInteger));
-    }
-
-    /**
-     * Stores the given NBTTagCompound into the map with the given string key.
-     */
-    public void setCompoundTag(String par1Str, NBTTagCompound par2NBTTagCompound)
-    {
-        this.tagMap.put(par1Str, par2NBTTagCompound.setName(par1Str));
+        this.tagMap.put(par1Str, new NBTTagIntArray(par2ArrayOfInteger));
     }
 
     /**
@@ -182,12 +166,41 @@ public class NBTTagCompound extends NBTBase
         return (NBTBase)this.tagMap.get(par1Str);
     }
 
+    public byte func_150299_b(String p_150299_1_)
+    {
+        NBTBase nbtbase = (NBTBase)this.tagMap.get(p_150299_1_);
+        return nbtbase != null ? nbtbase.getId() : 0;
+    }
+
     /**
      * Returns whether the given string has been previously stored as a key in the map.
      */
     public boolean hasKey(String par1Str)
     {
         return this.tagMap.containsKey(par1Str);
+    }
+
+    public boolean hasKey(String p_150297_1_, int p_150297_2_)
+    {
+        byte b0 = this.func_150299_b(p_150297_1_);
+
+        if (b0 == p_150297_2_)
+        {
+            return true;
+        }
+        else if (p_150297_2_ != 99)
+        {
+            if (b0 > 0)
+            {
+                //logger.warn("NBT tag {} was of wrong type; expected {}, found {}", new Object[] {p_150297_1_, func_150283_g(p_150297_2_), func_150283_g(b0)});
+            }
+
+            return false;
+        }
+        else
+        {
+            return b0 == 1 || b0 == 2 || b0 == 3 || b0 == 4 || b0 == 5 || b0 == 6;
+        }
     }
 
     /**
@@ -197,12 +210,12 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? 0 : ((NBTTagByte)this.tagMap.get(par1Str)).data;
+            return !this.tagMap.containsKey(par1Str) ? 0 : ((NBTBase.NBTPrimitive)this.tagMap.get(par1Str)).func_150290_f();
         }
         catch (ClassCastException classcastexception)
         {
+            return (byte)0;
         }
-        return 0;
     }
 
     /**
@@ -212,12 +225,12 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? 0 : ((NBTTagShort)this.tagMap.get(par1Str)).data;
+            return !this.tagMap.containsKey(par1Str) ? 0 : ((NBTBase.NBTPrimitive)this.tagMap.get(par1Str)).func_150289_e();
         }
         catch (ClassCastException classcastexception)
         {
+            return (short)0;
         }
-        return 0;
     }
 
     /**
@@ -227,12 +240,12 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? 0 : ((NBTTagInt)this.tagMap.get(par1Str)).data;
+            return !this.tagMap.containsKey(par1Str) ? 0 : ((NBTBase.NBTPrimitive)this.tagMap.get(par1Str)).func_150287_d();
         }
         catch (ClassCastException classcastexception)
         {
+            return 0;
         }
-        return 0;
     }
 
     /**
@@ -242,12 +255,12 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? 0L : ((NBTTagLong)this.tagMap.get(par1Str)).data;
+            return !this.tagMap.containsKey(par1Str) ? 0L : ((NBTBase.NBTPrimitive)this.tagMap.get(par1Str)).func_150291_c();
         }
         catch (ClassCastException classcastexception)
         {
+            return 0L;
         }
-        return 0;
     }
 
     /**
@@ -257,12 +270,12 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? 0.0F : ((NBTTagFloat)this.tagMap.get(par1Str)).data;
+            return !this.tagMap.containsKey(par1Str) ? 0.0F : ((NBTBase.NBTPrimitive)this.tagMap.get(par1Str)).func_150288_h();
         }
         catch (ClassCastException classcastexception)
         {
+            return 0.0F;
         }
-        return 0;
     }
 
     /**
@@ -272,12 +285,12 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? 0.0D : ((NBTTagDouble)this.tagMap.get(par1Str)).data;
+            return !this.tagMap.containsKey(par1Str) ? 0.0D : ((NBTBase.NBTPrimitive)this.tagMap.get(par1Str)).func_150286_g();
         }
         catch (ClassCastException classcastexception)
         {
+            return 0.0D;
         }
-        return 0;
     }
 
     /**
@@ -287,12 +300,12 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? "" : ((NBTTagString)this.tagMap.get(par1Str)).data;
+            return !this.tagMap.containsKey(par1Str) ? "" : ((NBTBase)this.tagMap.get(par1Str)).func_150285_a_();
         }
         catch (ClassCastException classcastexception)
         {
+            return "";
         }
-        return null;
     }
 
     /**
@@ -302,12 +315,13 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? new byte[0] : ((NBTTagByteArray)this.tagMap.get(par1Str)).byteArray;
+            return !this.tagMap.containsKey(par1Str) ? new byte[0] : ((NBTTagByteArray)this.tagMap.get(par1Str)).func_150292_c();
         }
         catch (ClassCastException classcastexception)
         {
+            //throw new ReportedException(this.createCrashReport(par1Str, 7, classcastexception));
+            return null;
         }
-        return null;
     }
 
     /**
@@ -317,12 +331,13 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? new int[0] : ((NBTTagIntArray)this.tagMap.get(par1Str)).intArray;
+            return !this.tagMap.containsKey(par1Str) ? new int[0] : ((NBTTagIntArray)this.tagMap.get(par1Str)).func_150302_c();
         }
         catch (ClassCastException classcastexception)
         {
+            //throw new ReportedException(this.createCrashReport(par1Str, 11, classcastexception));
+            return null;
         }
-        return null;
     }
 
     /**
@@ -333,27 +348,37 @@ public class NBTTagCompound extends NBTBase
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? new NBTTagCompound(par1Str) : (NBTTagCompound)this.tagMap.get(par1Str);
+            return !this.tagMap.containsKey(par1Str) ? new NBTTagCompound() : (NBTTagCompound)this.tagMap.get(par1Str);
         }
         catch (ClassCastException classcastexception)
         {
+            //throw new ReportedException(this.createCrashReport(par1Str, 10, classcastexception));
+            return null;
         }
-        return null;
     }
 
     /**
-     * Retrieves a NBTTagList subtag matching the specified key, or a new empty NBTTagList if no such key was stored.
+     * Gets the NBTTagList object with the given name. Args: name, NBTBase type
      */
-    public NBTTagList getTagList(String par1Str)
+    public NBTTagList getTagList(String p_150295_1_, int p_150295_2_)
     {
         try
         {
-            return !this.tagMap.containsKey(par1Str) ? new NBTTagList(par1Str) : (NBTTagList)this.tagMap.get(par1Str);
+            if (this.func_150299_b(p_150295_1_) != 9)
+            {
+                return new NBTTagList();
+            }
+            else
+            {
+                NBTTagList nbttaglist = (NBTTagList)this.tagMap.get(p_150295_1_);
+                return nbttaglist.tagCount() > 0 && nbttaglist.func_150303_d() != p_150295_2_ ? new NBTTagList() : nbttaglist;
+            }
         }
         catch (ClassCastException classcastexception)
         {
+            //throw new ReportedException(this.createCrashReport(p_150295_1_, 9, classcastexception));
+            return null;
         }
-        return null;
     }
 
     /**
@@ -375,15 +400,15 @@ public class NBTTagCompound extends NBTBase
 
     public String toString()
     {
-        String s = this.getName() + ":[";
+        String s = "{";
         String s1;
 
-        for (Iterator iterator = this.tagMap.keySet().iterator(); iterator.hasNext(); s = s + s1 + ":" + this.tagMap.get(s1) + ",")
+        for (Iterator iterator = this.tagMap.keySet().iterator(); iterator.hasNext(); s = s + s1 + ':' + this.tagMap.get(s1) + ',')
         {
             s1 = (String)iterator.next();
         }
 
-        return s + "]";
+        return s + "}";
     }
 
     /**
@@ -394,13 +419,17 @@ public class NBTTagCompound extends NBTBase
         return this.tagMap.isEmpty();
     }
 
+    /**
+     * Create a crash report which indicates a NBT read error.
+     */
+
 
     /**
      * Creates a clone of the tag.
      */
     public NBTBase copy()
     {
-        NBTTagCompound nbttagcompound = new NBTTagCompound(this.getName());
+        NBTTagCompound nbttagcompound = new NBTTagCompound();
         Iterator iterator = this.tagMap.keySet().iterator();
 
         while (iterator.hasNext())
@@ -430,11 +459,39 @@ public class NBTTagCompound extends NBTBase
         return super.hashCode() ^ this.tagMap.hashCode();
     }
 
-    /**
-     * Return the tag map for this compound.
-     */
-    static Map getTagMap(NBTTagCompound par0NBTTagCompound)
+    private static void func_150298_a(String p_150298_0_, NBTBase p_150298_1_, DataOutput p_150298_2_) throws IOException
     {
-        return par0NBTTagCompound.tagMap;
+        p_150298_2_.writeByte(p_150298_1_.getId());
+
+        if (p_150298_1_.getId() != 0)
+        {
+            p_150298_2_.writeUTF(p_150298_0_);
+            p_150298_1_.write(p_150298_2_);
+        }
+    }
+
+    private static byte func_150300_a(DataInput p_150300_0_) throws IOException
+    {
+        return p_150300_0_.readByte();
+    }
+
+    private static String func_150294_b(DataInput p_150294_0_) throws IOException
+    {
+        return p_150294_0_.readUTF();
+    }
+
+    static NBTBase func_150293_a(byte p_150293_0_, String p_150293_1_, DataInput p_150293_2_, int p_150293_3_)
+    {
+        NBTBase nbtbase = NBTBase.func_150284_a(p_150293_0_);
+
+        try
+        {
+            nbtbase.load(p_150293_2_, p_150293_3_);
+            return nbtbase;
+        }
+        catch (IOException ioexception)
+        {
+            return null;
+        }
     }
 }

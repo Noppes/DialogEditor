@@ -1,4 +1,4 @@
-package noppes.npcs.constants;
+package noppes.dialog;
 
 public enum EnumOptionType {
 	QuitOption,DialogOption,Disabled,RoleOption,CommandBlock;

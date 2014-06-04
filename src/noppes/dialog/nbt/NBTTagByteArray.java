@@ -7,18 +7,17 @@ import java.util.Arrays;
 
 public class NBTTagByteArray extends NBTBase
 {
-    /** The byte array stored in the tag. */
-    public byte[] byteArray;
+    /**
+     * The byte array stored in the tag.
+     */
+    private byte[] byteArray;
+    private static final String __OBFID = "CL_00001213";
 
-    public NBTTagByteArray(String par1Str)
-    {
-        super(par1Str);
-    }
+    NBTTagByteArray() {}
 
-    public NBTTagByteArray(String par1Str, byte[] par2ArrayOfByte)
+    public NBTTagByteArray(byte[] p_i45128_1_)
     {
-        super(par1Str);
-        this.byteArray = par2ArrayOfByte;
+        this.byteArray = p_i45128_1_;
     }
 
     /**
@@ -60,7 +59,7 @@ public class NBTTagByteArray extends NBTBase
     {
         byte[] abyte = new byte[this.byteArray.length];
         System.arraycopy(this.byteArray, 0, abyte, 0, this.byteArray.length);
-        return new NBTTagByteArray(this.getName(), abyte);
+        return new NBTTagByteArray(abyte);
     }
 
     public boolean equals(Object par1Obj)
@@ -71,5 +70,10 @@ public class NBTTagByteArray extends NBTBase
     public int hashCode()
     {
         return super.hashCode() ^ Arrays.hashCode(this.byteArray);
+    }
+
+    public byte[] func_150292_c()
+    {
+        return this.byteArray;
     }
 }

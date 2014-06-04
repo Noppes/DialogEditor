@@ -18,6 +18,8 @@ import java.util.zip.GZIPOutputStream;
 
 public class CompressedStreamTools
 {
+    private static final String __OBFID = "CL_00001226";
+
     /**
      * Load the gzipped compound from the inputstream.
      */
@@ -120,8 +122,7 @@ public class CompressedStreamTools
      */
     public static NBTTagCompound read(DataInput par0DataInput) throws IOException
     {
-        NBTBase nbtbase = NBTBase.readNamedTag(par0DataInput);
-
+        NBTBase nbtbase = func_150664_a(par0DataInput, 0);
         if (nbtbase instanceof NBTTagCompound)
         {
             return (NBTTagCompound)nbtbase;
@@ -134,7 +135,43 @@ public class CompressedStreamTools
 
     public static void write(NBTTagCompound par0NBTTagCompound, DataOutput par1DataOutput) throws IOException
     {
-        NBTBase.writeNamedTag(par0NBTTagCompound, par1DataOutput);
+        func_150663_a(par0NBTTagCompound, par1DataOutput);
+    }
+
+    private static void func_150663_a(NBTBase p_150663_0_, DataOutput p_150663_1_) throws IOException
+    {
+        p_150663_1_.writeByte(p_150663_0_.getId());
+
+        if (p_150663_0_.getId() != 0)
+        {
+            p_150663_1_.writeUTF("");
+            p_150663_0_.write(p_150663_1_);
+        }
+    }
+
+    private static NBTBase func_150664_a(DataInput p_150664_0_, int p_150664_1_) throws IOException
+    {
+        byte b0 = p_150664_0_.readByte();
+
+        if (b0 == 0)
+        {
+            return new NBTTagEnd();
+        }
+        else
+        {
+            p_150664_0_.readUTF();
+            NBTBase nbtbase = NBTBase.func_150284_a(b0);
+
+            try
+            {
+                nbtbase.load(p_150664_0_, p_150664_1_);
+                return nbtbase;
+            }
+            catch (IOException ioexception)
+            {
+                return null;
+            }
+        }
     }
 
     public static void write(NBTTagCompound par0NBTTagCompound, File par1File) throws IOException

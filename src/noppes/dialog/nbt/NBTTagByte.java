@@ -4,20 +4,19 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public class NBTTagByte extends NBTBase
+public class NBTTagByte extends NBTBase.NBTPrimitive
 {
-    /** The byte value for the tag. */
-    public byte data;
+    /**
+     * The byte value for the tag.
+     */
+    private byte data;
+    private static final String __OBFID = "CL_00001214";
 
-    public NBTTagByte(String par1Str)
-    {
-        super(par1Str);
-    }
+    NBTTagByte() {}
 
-    public NBTTagByte(String par1Str, byte par2)
+    public NBTTagByte(byte p_i45129_1_)
     {
-        super(par1Str);
-        this.data = par2;
+        this.data = p_i45129_1_;
     }
 
     /**
@@ -46,7 +45,7 @@ public class NBTTagByte extends NBTBase
 
     public String toString()
     {
-        return "" + this.data;
+        return "" + this.data + "b";
     }
 
     /**
@@ -54,7 +53,7 @@ public class NBTTagByte extends NBTBase
      */
     public NBTBase copy()
     {
-        return new NBTTagByte(this.getName(), this.data);
+        return new NBTTagByte(this.data);
     }
 
     public boolean equals(Object par1Obj)
@@ -73,5 +72,35 @@ public class NBTTagByte extends NBTBase
     public int hashCode()
     {
         return super.hashCode() ^ this.data;
+    }
+
+    public long func_150291_c()
+    {
+        return (long)this.data;
+    }
+
+    public int func_150287_d()
+    {
+        return this.data;
+    }
+
+    public short func_150289_e()
+    {
+        return (short)this.data;
+    }
+
+    public byte func_150290_f()
+    {
+        return this.data;
+    }
+
+    public double func_150286_g()
+    {
+        return (double)this.data;
+    }
+
+    public float func_150288_h()
+    {
+        return (float)this.data;
     }
 }

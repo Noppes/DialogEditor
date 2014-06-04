@@ -6,20 +6,22 @@ import java.io.IOException;
 
 public class NBTTagString extends NBTBase
 {
-    /** The string value for the tag (cannot be empty). */
-    public String data;
+    /**
+     * The string value for the tag (cannot be empty).
+     */
+    private String data;
+    private static final String __OBFID = "CL_00001228";
+
+    public NBTTagString()
+    {
+        this.data = "";
+    }
 
     public NBTTagString(String par1Str)
     {
-        super(par1Str);
-    }
+        this.data = par1Str;
 
-    public NBTTagString(String par1Str, String par2Str)
-    {
-        super(par1Str);
-        this.data = par2Str;
-
-        if (par2Str == null)
+        if (par1Str == null)
         {
             throw new IllegalArgumentException("Empty string not allowed");
         }
@@ -51,7 +53,7 @@ public class NBTTagString extends NBTBase
 
     public String toString()
     {
-        return "" + this.data;
+        return "\"" + this.data + "\"";
     }
 
     /**
@@ -59,7 +61,7 @@ public class NBTTagString extends NBTBase
      */
     public NBTBase copy()
     {
-        return new NBTTagString(this.getName(), this.data);
+        return new NBTTagString(this.data);
     }
 
     public boolean equals(Object par1Obj)
@@ -78,5 +80,10 @@ public class NBTTagString extends NBTBase
     public int hashCode()
     {
         return super.hashCode() ^ this.data.hashCode();
+    }
+
+    public String func_150285_a_()
+    {
+        return this.data;
     }
 }

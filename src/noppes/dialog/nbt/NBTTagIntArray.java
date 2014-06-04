@@ -7,18 +7,17 @@ import java.util.Arrays;
 
 public class NBTTagIntArray extends NBTBase
 {
-    /** The array of saved integers */
-    public int[] intArray;
+    /**
+     * The array of saved integers
+     */
+    private int[] intArray;
+    private static final String __OBFID = "CL_00001221";
 
-    public NBTTagIntArray(String par1Str)
-    {
-        super(par1Str);
-    }
+    NBTTagIntArray() {}
 
-    public NBTTagIntArray(String par1Str, int[] par2ArrayOfInteger)
+    public NBTTagIntArray(int[] p_i45132_1_)
     {
-        super(par1Str);
-        this.intArray = par2ArrayOfInteger;
+        this.intArray = p_i45132_1_;
     }
 
     /**
@@ -58,7 +57,17 @@ public class NBTTagIntArray extends NBTBase
 
     public String toString()
     {
-        return "[" + this.intArray.length + " bytes]";
+        String s = "[";
+        int[] aint = this.intArray;
+        int i = aint.length;
+
+        for (int j = 0; j < i; ++j)
+        {
+            int k = aint[j];
+            s = s + k + ",";
+        }
+
+        return s + "]";
     }
 
     /**
@@ -68,24 +77,21 @@ public class NBTTagIntArray extends NBTBase
     {
         int[] aint = new int[this.intArray.length];
         System.arraycopy(this.intArray, 0, aint, 0, this.intArray.length);
-        return new NBTTagIntArray(this.getName(), aint);
+        return new NBTTagIntArray(aint);
     }
 
     public boolean equals(Object par1Obj)
     {
-        if (!super.equals(par1Obj))
-        {
-            return false;
-        }
-        else
-        {
-            NBTTagIntArray nbttagintarray = (NBTTagIntArray)par1Obj;
-            return this.intArray == null && nbttagintarray.intArray == null || this.intArray != null && Arrays.equals(this.intArray, nbttagintarray.intArray);
-        }
+        return super.equals(par1Obj) ? Arrays.equals(this.intArray, ((NBTTagIntArray)par1Obj).intArray) : false;
     }
 
     public int hashCode()
     {
         return super.hashCode() ^ Arrays.hashCode(this.intArray);
+    }
+
+    public int[] func_150302_c()
+    {
+        return this.intArray;
     }
 }

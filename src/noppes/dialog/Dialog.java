@@ -1,37 +1,26 @@
-package noppes.npcs.controllers;
+package noppes.dialog;
 
 import java.util.HashMap;
+import java.util.Set;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import noppes.npcs.ICompatibilty;
-import noppes.npcs.VersionCompatibility;
-import noppes.npcs.constants.EnumOptionType;
+import noppes.dialog.nbt.NBTTagCompound;
+import noppes.dialog.nbt.NBTTagList;
 
-public class Dialog implements ICompatibilty {
-	public int version = VersionCompatibility.ModRev;
+public class Dialog{
+	public int version;
 	public int id = -1;;
 	public String title = "";
 	public String text = "";
 	public int quest = -1;
 	public DialogCategory category;
 	public HashMap<Integer,DialogOption> options = new HashMap<Integer,DialogOption>();
-	public Availability availability = new Availability();
-	public FactionOptions factionOptions = new FactionOptions();
 	public String sound;
 	public String command = "";
-	public PlayerMail mail = new PlayerMail();
 	
-	public boolean hasDialogs(EntityPlayer player) {
-		for(DialogOption option: options.values())
-			if(option != null && option.optionType == EnumOptionType.DialogOption && option.hasDialog() && option.isAvailable(player))
-				return true;
-		return false;
-	}
+	private NBTTagCompound data = new NBTTagCompound();
+	
 	public void readNBT(NBTTagCompound compound) {
     	version = compound.getInteger("ModRev");
-		VersionCompatibility.CheckAvailabilityCompatibility(this, compound);
 		
     	id = compound.getInteger("DialogId");
     	title = compound.getString("DialogTitle");
@@ -39,7 +28,6 @@ public class Dialog implements ICompatibilty {
     	quest = compound.getInteger("DialogQuest");
     	sound = compound.getString("DialogSound");
 		command = compound.getString("DialogCommand");
-		mail.readNBT(compound.getCompoundTag("DialogMail"));
     	
 		NBTTagList options = compound.getTagList("Options", 10);
 		HashMap<Integer,DialogOption> newoptions = new HashMap<Integer,DialogOption>();
@@ -51,19 +39,19 @@ public class Dialog implements ICompatibilty {
             newoptions.put(opslot, dia);
 		}
 		this.options = newoptions;
-
-    	availability.readFromNBT(compound);
-    	factionOptions.readFromNBT(compound);
+		this.data = compound;
 	}
 
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+		Set<String> keys = data.func_150296_c();
+		for(String key : keys)
+			compound.setTag(key, compound.getTag(key));
 		compound.setInteger("ModRev", version);
 		compound.setInteger("DialogId", id);
 		compound.setString("DialogTitle", title);
 		compound.setString("DialogText", text);
 		compound.setInteger("DialogQuest", quest);
 		compound.setString("DialogCommand", command);
-		compound.setTag("DialogMail", mail.writeNBT());
 		if(sound != null && !sound.isEmpty())
 			compound.setString("DialogSound", sound);
 
@@ -75,51 +63,13 @@ public class Dialog implements ICompatibilty {
 			options.appendTag(listcompound);
 		}
 		compound.setTag("Options", options);
-		
-    	availability.writeToNBT(compound);
-    	factionOptions.writeToNBT(compound);
 		return compound;
 	}
 
-	public boolean hasQuest() {
-		return getQuest() != null;
-	}
-	public Quest getQuest() {
-		return QuestController.instance.quests.get(quest);
-	}
 	public boolean hasOtherOptions() {
 		for(DialogOption option: options.values())
 			if(option != null && option.optionType != EnumOptionType.Disabled)
 				return true;
 		return false;
-	}
-	
-	public Dialog copy(EntityPlayer player) {
-		Dialog dialog = new Dialog();
-		dialog.id = id;
-		dialog.text = text;
-		dialog.title = title;
-		dialog.category = category;
-		dialog.quest = quest;
-		dialog.sound = sound;
-		dialog.mail = mail;
-		dialog.command = command;
-		
-		for(int slot : options.keySet()){
-			DialogOption option = options.get(slot);
-			if(option.optionType == EnumOptionType.DialogOption && (!option.hasDialog() || !option.isAvailable(player)))
-				continue;
-			dialog.options.put(slot, option);
-		}
-		return dialog;
-	}
-	@Override
-	public int getVersion() {
-		return version;
-	}
-	@Override
-	public void setVersion(int version) {
-		this.version = version;
-	}
-	
+	}	
 }
