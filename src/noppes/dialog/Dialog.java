@@ -72,4 +72,8 @@ public class Dialog{
 				return true;
 		return false;
 	}	
+	
+	public String toString(){
+		return title;
+	}
 }

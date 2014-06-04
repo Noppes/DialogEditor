@@ -38,6 +38,8 @@ public class DialogEditor extends JFrame{
 			controller.loadCategories(file);
 			activeFile = file;
 			tree.refresh();
+			this.getContentPane().validate();
+			this.repaint();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

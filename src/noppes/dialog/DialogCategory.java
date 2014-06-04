@@ -40,4 +40,8 @@ public class DialogCategory {
         nbtfactions.setTag("Dialogs", dialogs);
         return nbtfactions;
 	}
+	
+	public String toString(){
+		return title;
+	}
 }

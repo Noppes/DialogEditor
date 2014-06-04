@@ -48,4 +48,8 @@ public class DialogOption {
 			return null;
 		return DialogController.instance.dialogs.get(dialogId);
 	}
+
+	public String toString(){
+		return title;
+	}
 }
