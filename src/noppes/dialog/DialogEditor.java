@@ -22,7 +22,7 @@ public class DialogEditor extends JFrame{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
-		
+		setResizable(false);
 		this.add(BorderLayout.NORTH, new JScrollPane(tree = new GuiDialogTree(this)));
 		
 		this.setJMenuBar(menu = new GuiMenuBar(this));
@@ -38,8 +38,6 @@ public class DialogEditor extends JFrame{
 			controller.loadCategories(file);
 			activeFile = file;
 			tree.refresh();
-			this.getContentPane().validate();
-			this.repaint();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
