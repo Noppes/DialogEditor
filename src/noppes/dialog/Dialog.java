@@ -9,7 +9,7 @@ import noppes.dialog.nbt.NBTTagList;
 public class Dialog{
 	public int version;
 	public int id = -1;;
-	public String title = "";
+	public String title = "New";
 	public String text = "";
 	public int quest = -1;
 	public DialogCategory category;

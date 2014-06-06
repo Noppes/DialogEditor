@@ -96,7 +96,7 @@ public class DialogController {
 		}
 		categories.put(category.id, category);
 	}
-	public void removeCategory(int category) throws IOException{
+	public void removeCategory(int category){
 		DialogCategory cat = categories.get(category);
 		if(cat == null)
 			return;
@@ -121,7 +121,7 @@ public class DialogController {
 		}
 		return false;
 	}
-	public void saveDialog(int categoryId,Dialog dialog) throws IOException {
+	public void saveDialog(int categoryId,Dialog dialog){
 		DialogCategory category = categories.get(categoryId);
 		if(category == null)
 			return;

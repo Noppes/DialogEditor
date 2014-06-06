@@ -7,10 +7,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-public class GuiCategoryEdit extends JTabbedPane{
-	public GuiCategoryEdit(){
+public class GuiDialogEdit extends JTabbedPane{
+	public GuiDialogEdit(){
 		JComponent panel1 = makeTextPanel("Panel #1");
-        addTab("Category", panel1);
+        addTab("Dialog", panel1);
 	}
     protected JComponent makeTextPanel(String text) {
         JPanel panel = new JPanel(false);
