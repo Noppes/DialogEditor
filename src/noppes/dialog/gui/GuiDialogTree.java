@@ -8,7 +8,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -18,7 +17,6 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -43,6 +41,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		tree = new JTree(content);
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		tree.addMouseListener(this);
+		tree.addTreeSelectionListener(this);
 		this.setViewportView(tree);
 		
 		menu.add(add);
@@ -81,15 +80,15 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 			return;
 		if(node.getUserObject() instanceof DialogCategory){
 			DialogCategory category = (DialogCategory) node.getUserObject();
-			editor.add(BorderLayout.CENTER, component = new GuiCategoryEdit());
+			editor.add(BorderLayout.CENTER, component = new GuiCategoryEdit((DefaultTreeModel)tree.getModel(), node, category));
 		}
 		else if(node.getUserObject() instanceof Dialog){
 			Dialog dialog = (Dialog) node.getUserObject();
-			editor.add(BorderLayout.CENTER, component = new GuiCategoryEdit());
+			editor.add(BorderLayout.CENTER, component = new GuiDialogEdit(dialog));
 		}
 		else if(node.getUserObject() instanceof DialogOption){
 			DialogOption option = (DialogOption) node.getUserObject();
-			editor.add(BorderLayout.CENTER, component = new GuiCategoryEdit());
+			editor.add(BorderLayout.CENTER, component = new GuiOptionEdit(option));
 		}
 		editor.getContentPane().validate();
 		editor.repaint();
@@ -102,7 +101,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		tree.setSelectionPath(tree.getPathForLocation(e.getX(), e.getY()));
 		        
 		DefaultMutableTreeNode node = getSelectedNode();
-		if(node == null)
+		if(node == null || editor.activeFile == null)
 			return;
 
 		add.setVisible(true);
@@ -110,6 +109,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		
 		if(node.getUserObject() instanceof Dialog){
 			Dialog dialog = (Dialog) node.getUserObject();
+			add.setVisible(dialog.options.size() < 6);
 		}
 		else if(node.getUserObject() instanceof DialogOption){
 			add.setVisible(false);
@@ -132,6 +132,24 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				Dialog dialog = new Dialog();
 				editor.controller.saveDialog(category.id, dialog);
 				selected = new DefaultMutableTreeNode(dialog);
+				node.add(selected);
+			}
+			else if(node.getUserObject() instanceof Dialog){
+				Dialog dialog = (Dialog) node.getUserObject();
+				DialogOption option = new DialogOption();
+				for(int i = 0; i < 6; i++){
+					if(!dialog.options.containsKey(i)){
+						dialog.options.put(i, option);
+						break;
+					}
+				}
+				selected = new DefaultMutableTreeNode(option);
+				node.add(selected);
+			}
+			else if(!(node.getUserObject() instanceof DialogOption)){
+				DialogCategory category = new DialogCategory();
+				editor.controller.saveCategory(category);
+				selected = new DefaultMutableTreeNode(category);
 				node.add(selected);
 			}
 			((DefaultTreeModel)tree.getModel()).reload(node);	

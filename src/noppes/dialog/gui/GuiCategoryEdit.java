@@ -1,23 +1,62 @@
 package noppes.dialog.gui;
 
-import java.awt.GridLayout;
+import java.awt.Dimension;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
-public class GuiCategoryEdit extends JTabbedPane{
-	public GuiCategoryEdit(){
-		JComponent panel1 = makeTextPanel("Panel #1");
-        addTab("Category", panel1);
-	}
-    protected JComponent makeTextPanel(String text) {
+import noppes.dialog.DialogCategory;
+import noppes.dialog.DialogController;
+
+public class GuiCategoryEdit extends JTabbedPane implements FocusListener, DocumentListener{
+	private DialogCategory category;
+	private JTextField title;
+	private DefaultMutableTreeNode node;
+	private DefaultTreeModel model;
+	
+	public GuiCategoryEdit(DefaultTreeModel model, DefaultMutableTreeNode node, DialogCategory category){
+		this.node = node;
+		this.model = model;
+		this.category = category;
         JPanel panel = new JPanel(false);
-        JLabel filler = new JLabel(text);
-        filler.setHorizontalAlignment(JLabel.CENTER);
-        panel.setLayout(new GridLayout(1, 1));
-        panel.add(filler);
-        return panel;
-    }
+        panel.add(new JLabel("Name"));
+        panel.add(title = new JTextField(category.title));
+        title.setPreferredSize(new Dimension(200, 24));
+        title.addFocusListener(this);
+        title.getDocument().addDocumentListener(this);
+        addTab("Category", panel);
+	}
+	@Override
+	public void focusGained(FocusEvent e) {
+		
+	}
+	@Override
+	public void focusLost(FocusEvent e) {
+		if(e.getSource() == title){
+			DialogController.instance.saveCategory(category);
+			title.setText(category.title);
+			model.reload(node);
+		}
+	}
+	@Override
+	public void changedUpdate(DocumentEvent arg0) {
+		category.title = title.getText();
+		model.reload(node);
+	}
+	@Override
+	public void insertUpdate(DocumentEvent arg0) {
+		changedUpdate(arg0);
+	}
+	@Override
+	public void removeUpdate(DocumentEvent arg0) {
+		changedUpdate(arg0);
+	}
 }

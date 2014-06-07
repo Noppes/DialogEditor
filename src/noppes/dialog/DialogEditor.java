@@ -38,6 +38,8 @@ public class DialogEditor extends JFrame{
 			controller.loadCategories(file);
 			activeFile = file;
 			tree.refresh();
+			setTitle(file.getAbsolutePath());
+			menu.enableSave();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

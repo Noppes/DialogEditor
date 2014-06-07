@@ -8,7 +8,7 @@ import noppes.dialog.nbt.NBTTagList;
 public class DialogCategory {
 
 	public int id = -1;
-	public String title = "";
+	public String title = "New";
 	public HashMap<Integer,Dialog> dialogs;
 	public DialogCategory(){
 		dialogs = new HashMap<Integer, Dialog>();

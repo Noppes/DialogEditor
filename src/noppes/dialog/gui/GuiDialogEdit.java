@@ -7,8 +7,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
+import noppes.dialog.Dialog;
+
 public class GuiDialogEdit extends JTabbedPane{
-	public GuiDialogEdit(){
+	public GuiDialogEdit(Dialog dialog){
 		JComponent panel1 = makeTextPanel("Panel #1");
         addTab("Dialog", panel1);
 	}

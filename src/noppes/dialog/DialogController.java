@@ -72,7 +72,7 @@ public class DialogController {
 		dialogs.remove(dialog.id);
 	}
 	
-	public void saveCategory(DialogCategory category) throws IOException {
+	public void saveCategory(DialogCategory category){
 		if(category.id < 0){
 			if(lastUsedCatID == 0){
 				for(int catid : categories.keySet())
@@ -84,18 +84,18 @@ public class DialogController {
 		}
 		if(categories.containsKey(category.id)){
 			DialogCategory currentCategory = categories.get(category.id);
-			if(!currentCategory.title.equals(category.title)){
-				while(containsCategoryName(category.title))
-					category.title += "_";
-			}
+			while(containsCategoryName(category))
+				category.title += "_";
+			
 			category.dialogs = currentCategory.dialogs;
 		}
 		else{
-			while(containsCategoryName(category.title))
+			while(containsCategoryName(category))
 				category.title += "_";
 		}
 		categories.put(category.id, category);
 	}
+	
 	public void removeCategory(int category){
 		DialogCategory cat = categories.get(category);
 		if(cat == null)
@@ -105,10 +105,9 @@ public class DialogController {
 		categories.remove(category);
 	}
 	
-	private boolean containsCategoryName(String name) {
-		name = name.toLowerCase();
+	private boolean containsCategoryName(DialogCategory category) {
 		for(DialogCategory cat : categories.values()){
-			if(cat.title.toLowerCase().equals(name))
+			if(category.id != cat.id && cat.title.equalsIgnoreCase(category.title))
 				return true;
 		}
 		return false;

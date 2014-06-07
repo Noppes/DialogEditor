@@ -39,12 +39,14 @@ public class GuiMenuBar extends JMenuBar implements ActionListener{
 		itemLoad.addActionListener(this);
 		menu.add(itemLoad);
 		
+		
 		itemSave = new JMenuItem("Save", KeyEvent.VK_S);
-		itemSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+		itemSave.setEnabled(false);
 		itemSave.addActionListener(this);
 		menu.add(itemSave);
 		
 		itemSaveAs = new JMenuItem("Save as");
+		itemSaveAs.setEnabled(false);
 		itemSaveAs.addActionListener(this);
 		menu.add(itemSaveAs);
 
@@ -82,5 +84,12 @@ public class GuiMenuBar extends JMenuBar implements ActionListener{
             	
             }
 		}
+	}
+
+	public void enableSave() {
+		itemSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+		itemSave.setEnabled(true);
+		itemSaveAs.setEnabled(true);
+		
 	}
 }
