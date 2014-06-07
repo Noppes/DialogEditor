@@ -84,11 +84,11 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		}
 		else if(node.getUserObject() instanceof Dialog){
 			Dialog dialog = (Dialog) node.getUserObject();
-			editor.add(BorderLayout.CENTER, component = new GuiDialogEdit(dialog));
+			editor.add(BorderLayout.CENTER, component = new GuiDialogEdit((DefaultTreeModel)tree.getModel(), node, dialog));
 		}
 		else if(node.getUserObject() instanceof DialogOption){
 			DialogOption option = (DialogOption) node.getUserObject();
-			editor.add(BorderLayout.CENTER, component = new GuiOptionEdit(option));
+			editor.add(BorderLayout.CENTER, component = new GuiOptionEdit((DefaultTreeModel)tree.getModel(), node, option));
 		}
 		editor.getContentPane().validate();
 		editor.repaint();
