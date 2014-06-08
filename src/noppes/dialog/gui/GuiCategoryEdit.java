@@ -30,7 +30,7 @@ public class GuiCategoryEdit extends JTabbedPane implements FocusListener, Docum
         JPanel panel = new JPanel(false);
         panel.add(new JLabel("Name"));
         panel.add(title = new JTextField(category.title));
-        title.setPreferredSize(new Dimension(200, 24));
+        title.setPreferredSize(new Dimension(300, 24));
         title.addFocusListener(this);
         title.getDocument().addDocumentListener(this);
         addTab("Category", panel);

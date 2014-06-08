@@ -3,6 +3,7 @@ package noppes.dialog;
 import noppes.dialog.nbt.NBTTagCompound;
 
 public class DialogOption {
+	public int id;
 	public int dialogId = -1;
 	public String title = "Talk";
 	public EnumOptionType optionType = EnumOptionType.Disabled;
@@ -50,6 +51,6 @@ public class DialogOption {
 	}
 
 	public String toString(){
-		return title;
+		return title + " : " + id;
 	}
 }

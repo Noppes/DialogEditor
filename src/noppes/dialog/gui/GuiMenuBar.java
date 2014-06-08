@@ -30,6 +30,9 @@ public class GuiMenuBar extends JMenuBar implements ActionListener{
 	
 	public GuiMenuBar(DialogEditor editor){
 		this.editor = editor;
+        File file = getDefaultFile();
+        if(file != null)
+        	fileChooser.setCurrentDirectory(file);
 		JMenu menu = new JMenu("File");
 		menu.setMnemonic(KeyEvent.VK_F);
 		add(menu);
@@ -68,6 +71,26 @@ public class GuiMenuBar extends JMenuBar implements ActionListener{
 			}
 		};
 		fileChooser.setFileFilter(filter);
+	}
+	
+	private File getDefaultFile(){
+		File home = new File(System.getProperty("user.home"));
+		if(!home.exists())
+			return null;
+        String s = System.getProperty("os.name").toLowerCase();
+        if(s.contains("win")){
+        	File file = new File(home,"AppData/Roaming/.minecraft");
+        	return file.exists()?file:home;
+        }
+        if(s.contains("linux") || s.contains("unix")){
+        	File file = new File(home,".minecraft");
+        	return file.exists()?file:home;
+        }
+        if(s.contains("mac")){
+        	File file = new File(home,"Library/Application Support/minecraft");
+        	return file.exists()?file:home;
+        }
+        return home;
 	}
 
 	@Override

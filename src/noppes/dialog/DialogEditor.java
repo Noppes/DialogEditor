@@ -29,6 +29,7 @@ public class DialogEditor extends JFrame{
 		this.add(BorderLayout.NORTH, new JScrollPane(tree = new GuiDialogTree(this)));
 		
 		this.setJMenuBar(menu = new GuiMenuBar(this));
+		this.setTitle("Load a <world>/customnpcs/dialog.dat file to get started");
 	}
 	
 	public static void main(String[] args) {

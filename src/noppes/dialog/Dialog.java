@@ -7,8 +7,7 @@ import noppes.dialog.nbt.NBTTagCompound;
 import noppes.dialog.nbt.NBTTagList;
 
 public class Dialog{
-	public int version;
-	public int id = -1;;
+	public int id = -1;
 	public String title = "New";
 	public String text = "";
 	public int quest = -1;
@@ -19,9 +18,7 @@ public class Dialog{
 	
 	private NBTTagCompound data = new NBTTagCompound();
 	
-	public void readNBT(NBTTagCompound compound) {
-    	version = compound.getInteger("ModRev");
-		
+	public void readNBT(NBTTagCompound compound) {		
     	id = compound.getInteger("DialogId");
     	title = compound.getString("DialogTitle");
     	text = compound.getString("DialogText");
@@ -36,6 +33,7 @@ public class Dialog{
             int opslot = option.getInteger("OptionSlot");
             DialogOption dia = new DialogOption();
             dia.readNBT(option.getCompoundTag("Option"));
+            dia.id = opslot;
             newoptions.put(opslot, dia);
 		}
 		this.options = newoptions;
@@ -47,7 +45,6 @@ public class Dialog{
 		for(String key : keys){
 			compound.setTag(key, data.getTag(key));
 		}
-		compound.setInteger("ModRev", version);
 		compound.setInteger("DialogId", id);
 		compound.setString("DialogTitle", title);
 		compound.setString("DialogText", text);
@@ -75,6 +72,6 @@ public class Dialog{
 	}	
 	
 	public String toString(){
-		return title;
+		return title + " : " + id;
 	}
 }
