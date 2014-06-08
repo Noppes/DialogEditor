@@ -15,6 +15,7 @@ import javax.swing.tree.DefaultTreeModel;
 
 import noppes.dialog.Dialog;
 import noppes.dialog.DialogController;
+import noppes.dialog.DialogEditor;
 import noppes.dialog.DialogOption;
 
 public class GuiOptionEdit extends JTabbedPane implements FocusListener, DocumentListener{
@@ -49,6 +50,7 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
 	public void changedUpdate(DocumentEvent arg0) {
 		option.title = title.getText();
 		model.reload(node);
+		DialogEditor.Instance.setEdited(true);
 	}
 	@Override
 	public void insertUpdate(DocumentEvent arg0) {

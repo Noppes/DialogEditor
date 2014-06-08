@@ -80,8 +80,18 @@ public class GuiMenuBar extends JMenuBar implements ActionListener{
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
             	editor.load(file);
-            } else {
-            	
+            }
+		}
+		if(e.getSource() == itemSave){
+			editor.save(editor.activeFile);
+		}
+		if(e.getSource() == itemSaveAs){
+			System.out.println("save");
+            int returnVal = fileChooser.showSaveDialog(this);
+            
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+            	editor.save(file);
             }
 		}
 	}

@@ -133,6 +133,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				editor.controller.saveDialog(category.id, dialog);
 				selected = new DefaultMutableTreeNode(dialog);
 				node.add(selected);
+				DialogEditor.Instance.setEdited(true);
 			}
 			else if(node.getUserObject() instanceof Dialog){
 				Dialog dialog = (Dialog) node.getUserObject();
@@ -145,12 +146,14 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				}
 				selected = new DefaultMutableTreeNode(option);
 				node.add(selected);
+				DialogEditor.Instance.setEdited(true);
 			}
 			else if(!(node.getUserObject() instanceof DialogOption)){
 				DialogCategory category = new DialogCategory();
 				editor.controller.saveCategory(category);
 				selected = new DefaultMutableTreeNode(category);
 				node.add(selected);
+				DialogEditor.Instance.setEdited(true);
 			}
 			((DefaultTreeModel)tree.getModel()).reload(node);	
 			tree.setSelectionPath(new TreePath(selected.getPath()));
@@ -164,17 +167,20 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				DialogCategory category = (DialogCategory) node.getUserObject();
 				editor.controller.removeCategory(category.id);
 				node.removeFromParent();
+				DialogEditor.Instance.setEdited(true);
 			}
 			if(node.getUserObject() instanceof Dialog){
 				Dialog dialog = (Dialog) node.getUserObject();
 				editor.controller.removeDialog(dialog);
 				node.removeFromParent();
+				DialogEditor.Instance.setEdited(true);
 			}
 			if(node.getUserObject() instanceof DialogOption){
 				DialogOption option = (DialogOption) node.getUserObject();
 				Dialog dialog = (Dialog) parent.getUserObject();
 				dialog.options.values().remove(option);
 				node.removeFromParent();
+				DialogEditor.Instance.setEdited(true);
 			}
 			((DefaultTreeModel)tree.getModel()).reload(parent);	
 		}

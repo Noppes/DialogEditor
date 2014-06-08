@@ -12,12 +12,15 @@ import noppes.dialog.gui.GuiDialogTree;
 import noppes.dialog.gui.GuiMenuBar;
 
 public class DialogEditor extends JFrame{
+	public static DialogEditor Instance;
 	public DialogController controller = new DialogController();
 	public GuiDialogTree tree;
 	public GuiMenuBar menu;
 	public File activeFile;
+	private boolean isEdited = false;
 	
 	public DialogEditor(){
+		Instance = this;
 		setSize(800, 600);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -38,10 +41,30 @@ public class DialogEditor extends JFrame{
 			controller.loadCategories(file);
 			activeFile = file;
 			tree.refresh();
-			setTitle(file.getAbsolutePath());
 			menu.enableSave();
+			setTitle(activeFile.getAbsolutePath());
+			setEdited(false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void save(File file){
+		try {
+			controller.saveCategories(file);
+			activeFile = file;
+			setTitle(activeFile.getAbsolutePath());
+			System.out.println(activeFile.getAbsolutePath());
+			setEdited(false);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void setEdited(boolean bo){
+		if(isEdited == bo)
+			return;
+		isEdited = bo;
+		setTitle(activeFile.getAbsolutePath() + (isEdited?"*":""));
 	}
 }

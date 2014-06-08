@@ -15,6 +15,7 @@ import javax.swing.tree.DefaultTreeModel;
 
 import noppes.dialog.DialogCategory;
 import noppes.dialog.DialogController;
+import noppes.dialog.DialogEditor;
 
 public class GuiCategoryEdit extends JTabbedPane implements FocusListener, DocumentListener{
 	private DialogCategory category;
@@ -50,6 +51,7 @@ public class GuiCategoryEdit extends JTabbedPane implements FocusListener, Docum
 	public void changedUpdate(DocumentEvent arg0) {
 		category.title = title.getText();
 		model.reload(node);
+		DialogEditor.Instance.setEdited(true);
 	}
 	@Override
 	public void insertUpdate(DocumentEvent arg0) {

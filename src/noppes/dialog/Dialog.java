@@ -44,8 +44,9 @@ public class Dialog{
 
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		Set<String> keys = data.func_150296_c();
-		for(String key : keys)
-			compound.setTag(key, compound.getTag(key));
+		for(String key : keys){
+			compound.setTag(key, data.getTag(key));
+		}
 		compound.setInteger("ModRev", version);
 		compound.setInteger("DialogId", id);
 		compound.setString("DialogTitle", title);
