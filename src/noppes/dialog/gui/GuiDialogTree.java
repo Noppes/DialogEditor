@@ -1,6 +1,9 @@
 package noppes.dialog.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -32,7 +35,7 @@ import noppes.dialog.DialogEditor;
 import noppes.dialog.DialogOption;
 import noppes.dialog.EnumNodeType;
 
-public class GuiDialogTree extends JScrollPane implements MouseListener, ActionListener, TreeSelectionListener {
+public class GuiDialogTree extends JScrollPane implements MouseListener, ActionListener, TreeSelectionListener, ClipboardOwner {
 	private DialogEditor editor;
 	private DefaultMutableTreeNode content;
 	private JTree tree;
@@ -40,6 +43,8 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	
 	private JMenuItem add = new JMenuItem("Add");
 	private JMenuItem remove = new JMenuItem("Remove");
+	private JMenuItem copy = new JMenuItem("Copy");
+	private JMenuItem paste = new JMenuItem("Paste");
 	private JPopupMenu menu = new JPopupMenu();
 	
 	public GuiDialogTree(DialogEditor editor){
@@ -56,6 +61,9 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		
 		menu.add(add);
 		menu.add(remove);
+		menu.addSeparator();
+		menu.add(paste);
+		menu.add(copy);
 		add.addActionListener(this);
 		remove.addActionListener(this);
 	}
@@ -116,16 +124,30 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 
 		add.setVisible(true);
 		remove.setVisible(true);
+
+		copy.setVisible(true);
+		paste.setVisible(true);
+		
+		DialogNode copied = getClipboard();
 		
 		if(node.type == EnumNodeType.DIALOG){
 			Dialog dialog = (Dialog) node.getUserObject();
 			add.setVisible(dialog.options.size() < 6);
+			copy.setVisible(true);
+			paste.setVisible(false);
 		}
 		else if(node.type == EnumNodeType.OPTION){
 			add.setVisible(false);
+			copy.setVisible(false);
+			paste.setVisible(false);
 		}
 		else if(node.type == EnumNodeType.ROOT){
 			remove.setVisible(false);
+			paste.setVisible(false);
+			copy.setEnabled(copied != null && copied.type == EnumNodeType.CATEGORY);
+		}
+		else if(node.type == EnumNodeType.CATEGORY){
+			copy.setEnabled(copied != null && copied.type == EnumNodeType.DIALOG);
 		}
 		menu.show(this, e.getX(), e.getY());
 	}
@@ -194,7 +216,48 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 			}
 			((DefaultTreeModel)tree.getModel()).reload(parent);	
 		}
+		if(event.getSource() == copy){
+			Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clip.setContents(node, this);
+		}
+		if(event.getSource() == paste){
+			DialogNode pasted = getClipboard();
+			if(pasted == null)
+				return;
+			if(pasted.type == EnumNodeType.DIALOG && node.type == EnumNodeType.CATEGORY){
+				addDialog((DialogCategory)node.getUserObject(), (Dialog)pasted.getUserObject());
+			}
 			
+		}
+			
+	}
+	private boolean addDialog(DialogCategory category, Dialog dialog){
+		if(editor.controller.dialogs.containsKey(dialog.id)){
+			String[] buttons = {"Overwrite", "Increment", "Cancel"};
+			int result = JOptionPane.showOptionDialog(this, dialog + "\nDialog found with the same id", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
+			if(result == 0)
+				editor.controller.removeDialog(editor.controller.dialogs.get(dialog.id));
+			if(result == 1)
+				dialog.id = editor.controller.getUniqueDialogID();
+			if(result == 2)
+				return false;
+		}
+		if(editor.controller.containsDialogName(category, dialog.title)){
+			String[] buttons = {"Overwrite", "Change", "Cancel"};
+			int result = JOptionPane.showOptionDialog(this, dialog + "\nDialog found with the same id", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
+			if(result == 0)
+				editor.controller.removeDialog(editor.controller.getDialogFromName(category, dialog.title));
+		}
+		
+		return true;
+	}
+	
+	private DialogNode getClipboard(){
+		Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+		Transferable content = clip.getContents(this);
+		if(!(content instanceof DialogNode))
+			return null;
+		return (DialogNode) content;
 	}
 	
 	private DialogNode getSelectedNode(){
@@ -284,4 +347,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	        return MOVE;  
 	    }  
 	}
+
+	@Override
+	public void lostOwnership(Clipboard arg0, Transferable arg1) {}
 }

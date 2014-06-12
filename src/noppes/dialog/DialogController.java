@@ -105,20 +105,35 @@ public class DialogController {
 		categories.remove(category);
 	}
 	
-	private boolean containsCategoryName(DialogCategory category) {
+	public boolean containsCategoryName(DialogCategory category) {
 		for(DialogCategory cat : categories.values()){
 			if(category.id != cat.id && cat.title.equalsIgnoreCase(category.title))
 				return true;
 		}
 		return false;
 	}
-	private boolean containsDialogName(DialogCategory category, String name) {
+	public boolean containsDialogName(DialogCategory category, String name) {
+		return getDialogFromName(category, name) != null;
+	}
+
+	public Dialog getDialogFromName(DialogCategory category, String name) {
 		name = name.toLowerCase();
 		for(Dialog dia : category.dialogs.values()){
 			if(dia.title.toLowerCase().equals(name))
-				return true;
+				return dia;
 		}
-		return false;
+		return null;
+	}
+	
+	public int getUniqueDialogID(){
+		if(lastUsedDialogID == 0){
+			for(int catid : dialogs.keySet())
+				if(catid > lastUsedDialogID)
+					lastUsedDialogID = catid;
+		}
+		lastUsedDialogID++;
+		return lastUsedDialogID;
+		
 	}
 	public void saveDialog(int categoryId,Dialog dialog){
 		DialogCategory category = categories.get(categoryId);
@@ -128,13 +143,7 @@ public class DialogController {
 		dialog.category = category;
 
 		if(dialog.id < 0){
-			if(lastUsedDialogID == 0){
-				for(int catid : dialogs.keySet())
-					if(catid > lastUsedDialogID)
-						lastUsedDialogID = catid;
-			}
-			lastUsedDialogID++;
-			dialog.id = lastUsedDialogID;
+			dialog.id = getUniqueDialogID();
     		while(containsDialogName(dialog.category, dialog.title))
     			dialog.title += "_";
 		}
@@ -152,4 +161,5 @@ public class DialogController {
 		}
 		return map;
 	}
+
 }
