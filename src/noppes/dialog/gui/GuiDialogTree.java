@@ -12,7 +12,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import javax.swing.DropMode;
 import javax.swing.JComponent;
@@ -31,9 +35,12 @@ import javax.swing.tree.TreeSelectionModel;
 
 import noppes.dialog.Dialog;
 import noppes.dialog.DialogCategory;
+import noppes.dialog.DialogController;
 import noppes.dialog.DialogEditor;
 import noppes.dialog.DialogOption;
 import noppes.dialog.EnumNodeType;
+import noppes.dialog.nbt.CompressedStreamTools;
+import noppes.dialog.nbt.NBTTagCompound;
 
 public class GuiDialogTree extends JScrollPane implements MouseListener, ActionListener, TreeSelectionListener, ClipboardOwner {
 	private DialogEditor editor;
@@ -82,6 +89,9 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				}
 			}
 		}
+        DefaultTreeModel model = (DefaultTreeModel)tree.getModel();
+        model.reload();
+        
 		tree.expandRow(0);
 		editor.getContentPane().validate();
 		editor.repaint();
@@ -231,7 +241,8 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		}
 			
 	}
-	private boolean addDialog(DialogCategory category, Dialog dialog){
+	
+	public boolean addDialog(DialogCategory category, Dialog dialog){
 		if(editor.controller.dialogs.containsKey(dialog.id)){
 			String[] buttons = {"Overwrite", "Increment", "Cancel"};
 			int result = JOptionPane.showOptionDialog(this, dialog + "\nDialog found with the same id", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
@@ -244,11 +255,17 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		}
 		if(editor.controller.containsDialogName(category, dialog.title)){
 			String[] buttons = {"Overwrite", "Change", "Cancel"};
-			int result = JOptionPane.showOptionDialog(this, dialog + "\nDialog found with the same id", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
+			int result = JOptionPane.showOptionDialog(this, dialog + "\nDialog found with the same name in this category", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
 			if(result == 0)
 				editor.controller.removeDialog(editor.controller.getDialogFromName(category, dialog.title));
+			if(result == 1){
+	    		while(editor.controller.containsDialogName(category, dialog.title))
+	    			dialog.title += "_";
+			}
+			if(result == 2)
+				return false;
 		}
-		
+		DialogController.instance.saveDialog(category.id, dialog);
 		return true;
 	}
 	
@@ -273,7 +290,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	public void mouseClicked(MouseEvent e) {}
 
 
-	class DialogNode extends DefaultMutableTreeNode implements Transferable{
+	static class DialogNode extends DefaultMutableTreeNode implements Transferable{
 		public EnumNodeType type = EnumNodeType.ROOT;
 		public DialogNode(Object ob){
 			super(ob);
@@ -286,17 +303,63 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		}
 		@Override
 		public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
-			return this;
+			return toBytes();
 		}
 		@Override
 		public DataFlavor[] getTransferDataFlavors() {
-			return null;
+			return new DataFlavor[0];
 		}
 		@Override
 		public boolean isDataFlavorSupported(DataFlavor flavor) {
-			return false;
+			return true;
+		}
+
+		
+		public byte[] toBytes() throws IOException{
+			NBTTagCompound compound = null;
+			if(type == EnumNodeType.CATEGORY){
+				compound = ((DialogCategory)getUserObject()).writeNBT(new NBTTagCompound());
+			}
+			if(type == EnumNodeType.DIALOG){
+				compound = ((Dialog)getUserObject()).writeToNBT(new NBTTagCompound());
+			}
+			if(compound == null)
+				return null;
+			
+			compound.setInteger("NodeType", type.ordinal());
+			
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(stream);
+			
+			CompressedStreamTools.write(compound, oos);
+			oos.close();
+			return stream.toByteArray();
 		}
 		
+		public static DialogNode readFromBytes(byte[] bytes) throws IOException{
+			ByteArrayInputStream stream = new ByteArrayInputStream (bytes);
+			ObjectInputStream ois = new ObjectInputStream(stream);
+			
+			NBTTagCompound compound = CompressedStreamTools.read(ois);
+			
+			ois.close();
+			
+			if(!compound.hasKey("NodeType"))
+				return null;
+			EnumNodeType type = EnumNodeType.values()[compound.getInteger("NodeType")];
+
+			if(type == EnumNodeType.CATEGORY){
+				DialogCategory category = new DialogCategory();
+				category.readNBT(compound);
+				return new DialogNode(category);
+			}
+			if(type == EnumNodeType.DIALOG){
+				Dialog dialog = new Dialog();
+				dialog.readNBT(compound);
+				return new DialogNode(dialog);
+			}
+			return null;
+		}
 	}
 	
 	class NodeDragHandler extends TransferHandler{
@@ -308,7 +371,15 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	    public boolean canImport(TransferHandler.TransferSupport support) {
 			if(!support.isDrop())
 				return false;
-	        DialogNode selected = tree.getSelectedNode();
+			JTree t = (JTree) support.getComponent();
+			DialogNode selected;
+			try {
+				byte[] bytes = (byte[]) support.getTransferable().getTransferData(DataFlavor.imageFlavor);
+				selected = DialogNode.readFromBytes(bytes);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
 	        if(selected.type != EnumNodeType.DIALOG)
 	        	return false;
 			JTree.DropLocation dl = (JTree.DropLocation)support.getDropLocation();
@@ -318,33 +389,35 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	    }
 	    @Override
 	    public boolean importData(TransferHandler.TransferSupport support) {
-        	DialogNode node = tree.getSelectedNode();
+			DialogNode node;
+			try {
+				byte[] bytes = (byte[]) support.getTransferable().getTransferData(DataFlavor.imageFlavor);
+				node = DialogNode.readFromBytes(bytes);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
 	        JTree.DropLocation dl = (JTree.DropLocation)support.getDropLocation();
-	        int childIndex = dl.getChildIndex();
 	        TreePath dest = dl.getPath();
 	        DialogNode parent = (DialogNode)dest.getLastPathComponent();
-	        JTree tree = (JTree)support.getComponent();
-	        DefaultTreeModel model = (DefaultTreeModel)tree.getModel();
-	        int index = childIndex; 
-	        if(childIndex == -1) {     
-	            index = parent.getChildCount();
-	        }
         	Dialog dialog = (Dialog) node.getUserObject();
-        	DialogCategory category = (DialogCategory) ((DialogNode)node.getParent()).getUserObject();
-        	category.dialogs.values().remove(dialog);
-        	category = (DialogCategory) parent.getUserObject();
-        	category.dialogs.put(dialog.id, dialog);
-            model.removeNodeFromParent(node);
-            model.insertNodeInto(node, parent, index++);
-            DialogEditor.Instance.setEdited(true);
-	        return true;
+			DialogCategory category = (DialogCategory) parent.getUserObject();
+        	if(this.tree.addDialog(category, dialog)){
+	            this.tree.refresh();
+	            DialogEditor.Instance.setEdited(true);
+		        return true;
+        	}
+	        return false;
 	    }
 
+	    @Override
 	    protected Transferable createTransferable(JComponent c) {
 	    	return tree.getSelectedNode();
 	    }   
+	    
+	    @Override
 	    public int getSourceActions(JComponent c) {  
-	        return MOVE;  
+	        return COPY;  
 	    }  
 	}
 
