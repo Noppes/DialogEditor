@@ -17,6 +17,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Enumeration;
 
 import javax.swing.DropMode;
 import javax.swing.JComponent;
@@ -25,6 +26,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -73,28 +75,39 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		menu.add(copy);
 		add.addActionListener(this);
 		remove.addActionListener(this);
+		copy.addActionListener(this);
+		paste.addActionListener(this);
 	}
 	
 	
 	public void refresh() {
-		content.removeAllChildren();
-		for(DialogCategory category : editor.controller.categories.values()){
-			DefaultMutableTreeNode parent = new DialogNode(category);
-			content.add(parent);
-			for(Dialog dialog : category.dialogs.values()){
-				DefaultMutableTreeNode child = new DialogNode(dialog);
-				parent.add(child);
-				for(DialogOption option : dialog.options.values()){
-					child.add(new DialogNode(option));
+
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				content.removeAllChildren();
+				Enumeration<TreePath> paths = tree.getExpandedDescendants(tree.getPathForRow(0));
+				for(DialogCategory category : editor.controller.categories.values()){
+					DefaultMutableTreeNode parent = new DialogNode(category);
+					content.add(parent);
+					for(Dialog dialog : category.dialogs.values()){
+						DefaultMutableTreeNode child = new DialogNode(dialog);
+						parent.add(child);
+						for(DialogOption option : dialog.options.values()){
+							child.add(new DialogNode(option));
+						}
+					}
 				}
+		        DefaultTreeModel model = (DefaultTreeModel)tree.getModel();
+		        model.reload();
+		        if(paths != null){
+			        while(paths.hasMoreElements()){
+			        	TreePath path = paths.nextElement();
+			        	tree.expandPath(path);
+			        }
+		        }
 			}
-		}
-        DefaultTreeModel model = (DefaultTreeModel)tree.getModel();
-        model.reload();
-        
-		tree.expandRow(0);
-		editor.getContentPane().validate();
-		editor.repaint();
+		});
 	}
 
 
@@ -153,11 +166,11 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		}
 		else if(node.type == EnumNodeType.ROOT){
 			remove.setVisible(false);
-			paste.setVisible(false);
-			copy.setEnabled(copied != null && copied.type == EnumNodeType.CATEGORY);
+			copy.setVisible(false);
+			paste.setEnabled(copied != null && copied.type == EnumNodeType.CATEGORY);
 		}
 		else if(node.type == EnumNodeType.CATEGORY){
-			copy.setEnabled(copied != null && copied.type == EnumNodeType.DIALOG);
+			paste.setEnabled(copied != null && copied.type == EnumNodeType.DIALOG);
 		}
 		menu.show(this, e.getX(), e.getY());
 	}
@@ -236,6 +249,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				return;
 			if(pasted.type == EnumNodeType.DIALOG && node.type == EnumNodeType.CATEGORY){
 				addDialog((DialogCategory)node.getUserObject(), (Dialog)pasted.getUserObject());
+				refresh();						
 			}
 			
 		}
@@ -272,9 +286,15 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	private DialogNode getClipboard(){
 		Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
 		Transferable content = clip.getContents(this);
-		if(!(content instanceof DialogNode))
+		if(!content.isDataFlavorSupported(DialogNode.dmselFlavor))
 			return null;
-		return (DialogNode) content;
+		try {
+			byte[] bytes = (byte[]) content.getTransferData(DialogNode.dmselFlavor);
+			return DialogNode.readFromBytes(bytes);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	private DialogNode getSelectedNode(){
@@ -292,6 +312,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 
 	static class DialogNode extends DefaultMutableTreeNode implements Transferable{
 		public EnumNodeType type = EnumNodeType.ROOT;
+		public static DataFlavor dmselFlavor = new DataFlavor(DialogNode.class, "Test data flavor");
 		public DialogNode(Object ob){
 			super(ob);
 			if(ob instanceof DialogCategory)
@@ -307,11 +328,11 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		}
 		@Override
 		public DataFlavor[] getTransferDataFlavors() {
-			return new DataFlavor[0];
+			return new DataFlavor[]{dmselFlavor};
 		}
 		@Override
 		public boolean isDataFlavorSupported(DataFlavor flavor) {
-			return true;
+			return dmselFlavor == flavor;
 		}
 
 		
@@ -374,7 +395,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 			JTree t = (JTree) support.getComponent();
 			DialogNode selected;
 			try {
-				byte[] bytes = (byte[]) support.getTransferable().getTransferData(DataFlavor.imageFlavor);
+				byte[] bytes = (byte[]) support.getTransferable().getTransferData(DialogNode.dmselFlavor);
 				selected = DialogNode.readFromBytes(bytes);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -391,7 +412,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	    public boolean importData(TransferHandler.TransferSupport support) {
 			DialogNode node;
 			try {
-				byte[] bytes = (byte[]) support.getTransferable().getTransferData(DataFlavor.imageFlavor);
+				byte[] bytes = (byte[]) support.getTransferable().getTransferData(DialogNode.dmselFlavor);
 				node = DialogNode.readFromBytes(bytes);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -403,7 +424,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
         	Dialog dialog = (Dialog) node.getUserObject();
 			DialogCategory category = (DialogCategory) parent.getUserObject();
         	if(this.tree.addDialog(category, dialog)){
-	            this.tree.refresh();
+				this.tree.refresh();						
 	            DialogEditor.Instance.setEdited(true);
 		        return true;
         	}
@@ -422,5 +443,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	}
 
 	@Override
-	public void lostOwnership(Clipboard arg0, Transferable arg1) {}
+	public void lostOwnership(Clipboard arg0, Transferable arg1) {
+		
+	}
 }
