@@ -278,10 +278,10 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 			if(result == 2)
 				return false;
 		}
+		Set<Dialog> dialogs = new HashSet<Dialog>(category.dialogs.values());
 		category.dialogs.clear();
 		editor.controller.saveCategory(category);
 		
-		Set<Dialog> dialogs = new HashSet<Dialog>(category.dialogs.values());
 		for(Dialog dialog : dialogs){
 			addDialog(category, dialog);
 		}
