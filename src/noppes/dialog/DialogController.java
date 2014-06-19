@@ -3,7 +3,6 @@ package noppes.dialog;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -84,13 +83,13 @@ public class DialogController {
 		}
 		if(categories.containsKey(category.id)){
 			DialogCategory currentCategory = categories.get(category.id);
-			while(containsCategoryName(category))
+			while(containsCategoryName(category, category.title))
 				category.title += "_";
 			
 			category.dialogs = currentCategory.dialogs;
 		}
 		else{
-			while(containsCategoryName(category))
+			while(containsCategoryName(category, category.title))
 				category.title += "_";
 		}
 		categories.put(category.id, category);
@@ -105,21 +104,26 @@ public class DialogController {
 		categories.remove(category);
 	}
 	
-	public boolean containsCategoryName(DialogCategory category) {
-		for(DialogCategory cat : categories.values()){
-			if(category.id != cat.id && cat.title.equalsIgnoreCase(category.title))
-				return true;
-		}
-		return false;
-	}
-	public boolean containsDialogName(DialogCategory category, String name) {
-		return getDialogFromName(category, name) != null;
+	public boolean containsCategoryName(DialogCategory category, String title) {
+		return getCategoryFromName(category, title) != null;
 	}
 
-	public Dialog getDialogFromName(DialogCategory category, String name) {
+	public DialogCategory getCategoryFromName(DialogCategory category, String title) {
+		for(DialogCategory cat : categories.values()){
+			if((category.id != cat.id || category == null) && cat.title.equalsIgnoreCase(category.title))
+				return cat;
+		}
+		return null;
+	}
+	
+	public boolean containsDialogName(DialogCategory category, Dialog dialog, String name) {
+		return getDialogFromName(category, dialog, name) != null;
+	}
+
+	public Dialog getDialogFromName(DialogCategory category, Dialog dialog, String name) {
 		name = name.toLowerCase();
 		for(Dialog dia : category.dialogs.values()){
-			if(dia.title.toLowerCase().equals(name))
+			if(dialog.id != dia.id && dia.title.toLowerCase().equals(name))
 				return dia;
 		}
 		return null;
@@ -144,7 +148,7 @@ public class DialogController {
 
 		if(dialog.id < 0){
 			dialog.id = getUniqueDialogID();
-    		while(containsDialogName(dialog.category, dialog.title))
+    		while(containsDialogName(dialog.category, dialog, dialog.title))
     			dialog.title += "_";
 		}
     	dialogs.put(dialog.id, dialog);
@@ -160,6 +164,16 @@ public class DialogController {
 			map.put(category.title, category.id);
 		}
 		return map;
+	}
+
+	public int getUniqueCategoryID() {
+		if(lastUsedCatID == 0){
+			for(int catid : categories.keySet())
+				if(catid > lastUsedCatID)
+					lastUsedCatID = catid;
+		}
+		lastUsedCatID++;
+		return lastUsedCatID;
 	}
 
 }

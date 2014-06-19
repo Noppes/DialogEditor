@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.DropMode;
 import javax.swing.JComponent;
@@ -251,11 +253,45 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				addDialog((DialogCategory)node.getUserObject(), (Dialog)pasted.getUserObject());
 				refresh();						
 			}
+			if(pasted.type == EnumNodeType.CATEGORY && node.type == EnumNodeType.ROOT){
+				addCategory((DialogCategory) pasted.getUserObject());
+				refresh();						
+			}
 			
 		}
 			
 	}
 	
+	public boolean addCategory(DialogCategory category) {
+		if(editor.controller.categories.containsKey(category.id)){
+			category.id = editor.controller.getUniqueCategoryID();
+		}
+		if(editor.controller.containsCategoryName(category, category.title)){
+			String[] buttons = {"Overwrite", "Change", "Cancel"};
+			int result = JOptionPane.showOptionDialog(this, category + "\nCategory found with the same namey", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
+			if(result == 0)
+				editor.controller.removeCategory(editor.controller.getCategoryFromName(category, category.title).id);
+			if(result == 1){
+	    		while(editor.controller.containsCategoryName(category, category.title))
+	    			category.title += "_";
+			}
+			if(result == 2)
+				return false;
+		}
+		category.dialogs.clear();
+		editor.controller.saveCategory(category);
+		
+		Set<Dialog> dialogs = new HashSet<Dialog>(category.dialogs.values());
+		for(Dialog dialog : dialogs){
+			addDialog(category, dialog);
+		}
+		
+		
+		
+		return true;
+	}
+
+
 	public boolean addDialog(DialogCategory category, Dialog dialog){
 		if(editor.controller.dialogs.containsKey(dialog.id)){
 			String[] buttons = {"Overwrite", "Increment", "Cancel"};
@@ -267,13 +303,13 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 			if(result == 2)
 				return false;
 		}
-		if(editor.controller.containsDialogName(category, dialog.title)){
+		if(editor.controller.containsDialogName(category, dialog, dialog.title)){
 			String[] buttons = {"Overwrite", "Change", "Cancel"};
 			int result = JOptionPane.showOptionDialog(this, dialog + "\nDialog found with the same name in this category", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
 			if(result == 0)
-				editor.controller.removeDialog(editor.controller.getDialogFromName(category, dialog.title));
+				editor.controller.removeDialog(editor.controller.getDialogFromName(category, dialog, dialog.title));
 			if(result == 1){
-	    		while(editor.controller.containsDialogName(category, dialog.title))
+	    		while(editor.controller.containsDialogName(category, dialog, dialog.title))
 	    			dialog.title += "_";
 			}
 			if(result == 2)
@@ -392,7 +428,6 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	    public boolean canImport(TransferHandler.TransferSupport support) {
 			if(!support.isDrop())
 				return false;
-			JTree t = (JTree) support.getComponent();
 			DialogNode selected;
 			try {
 				byte[] bytes = (byte[]) support.getTransferable().getTransferData(DialogNode.dmselFlavor);
