@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.util.Map;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -21,12 +22,13 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
 import noppes.dialog.Dialog;
-import noppes.dialog.DialogEditor;
+import noppes.dialog.DialogController;
 import noppes.dialog.DialogOption;
 import noppes.dialog.gui.GuiDialogTree.DialogNode;
 
 public class GuiOptionEdit extends JTabbedPane implements FocusListener, DocumentListener, ActionListener{
 	private DialogOption option;
+	private Dialog dialog;
 	private JTextField title;
 	private JComboBox position;
 	
@@ -34,11 +36,12 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
 	private DefaultTreeModel model;
 	private JTree tree;
 	
-	public GuiOptionEdit(JTree tree, DefaultMutableTreeNode node, DialogOption option){
+	public GuiOptionEdit(JTree tree, DefaultMutableTreeNode node, Dialog dialog, DialogOption option){
 		this.node = node;
 		this.tree = tree;
 		this.model = (DefaultTreeModel) tree.getModel();
 		this.option = option;
+		this.dialog = dialog;
         JPanel panel = new JPanel(new GridBagLayout());       
         
         GridBagConstraints gbc = new GridBagConstraints();
@@ -47,7 +50,7 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
         gbc.gridy = 0;
         panel.add(new JLabel("Name"), gbc);
         gbc.gridx = 1;
-        panel.add(title = new JTextField(option.title), gbc);
+        panel.add(title = new JTextField(option.getTitle()), gbc);
         
         title.setPreferredSize(new Dimension(300, 24));
         title.addFocusListener(this);
@@ -58,7 +61,7 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
         panel.add(new JLabel("Position"), gbc);
         gbc.gridx = 1;
         panel.add(position = new JComboBox(new String[]{"0", "1", "2", "3", "4", "5"}), gbc);
-        position.setSelectedIndex(option.id);
+        position.setSelectedIndex(option.optionID);
         position.setEditable(true);
         position.addActionListener(this);
         
@@ -76,9 +79,9 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
 	}
 	@Override
 	public void changedUpdate(DocumentEvent arg0) {
-		option.title = title.getText();
+		option.setTitle(title.getText());
+		DialogController.instance.saveDialog(dialog.category.getID(), dialog);
 		model.reload(node);
-		DialogEditor.Instance.setEdited(true);
 	}
 	@Override
 	public void insertUpdate(DocumentEvent arg0) {
@@ -93,14 +96,19 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
 		if(e.getSource() == position){
 			DialogNode parent = (DialogNode)node.getParent();
 			Dialog dialog = (Dialog) parent.getUserObject();
+			
 			int index = position.getSelectedIndex();
-			DialogOption op = dialog.options.get(index);
+			Map<Integer,DialogOption> options = dialog.getOptions();
+			DialogOption op = options.remove(index);
 			if(op != null){
-				dialog.options.put(option.id, op);
-				op.id = option.id;
+				options.put(option.optionID, op);
+				op.optionID = option.optionID;
 			}
-			option.id = index;
-			dialog.options.put(index, option);
+			option.optionID = index;
+			options.put(index, option);
+			dialog.setOptions(options);
+			DialogController.instance.saveDialog(dialog.category.getID(), dialog);
+			
 			model.reload(parent);
 			tree.setSelectionPath(new TreePath(node.getPath()));
 		}

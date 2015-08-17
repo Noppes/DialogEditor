@@ -34,12 +34,12 @@ public class GuiDialogEdit extends JTabbedPane implements FocusListener, Documen
 		this.dialog = dialog;
         JPanel panel = new JPanel(false);
         panel.add(new JLabel("Name"));
-        panel.add(title = new JTextField(dialog.title));
+        panel.add(title = new JTextField(dialog.getTitle()));
         title.setPreferredSize(new Dimension(300, 24));
         title.addFocusListener(this);
         title.getDocument().addDocumentListener(this);
         addTab("Dialog", panel);
-        addTab("Text", area = new JTextArea(dialog.text));
+        addTab("Text", area = new JTextArea(dialog.getText()));
         area.getDocument().addDocumentListener(this);
         this.setSelectedIndex(tabIndex);
         this.addChangeListener(this);
@@ -52,22 +52,20 @@ public class GuiDialogEdit extends JTabbedPane implements FocusListener, Documen
 	@Override
 	public void focusLost(FocusEvent e) {
 		if(e.getSource() == title){
-			DialogController.instance.saveDialog(dialog.category.id, dialog);
-			title.setText(dialog.title);
+			DialogController.instance.saveDialog(dialog.category.getID(), dialog);
+			title.setText(dialog.getTitle());
 			model.reload(node);
 		}
 	}
 	@Override
 	public void changedUpdate(DocumentEvent e) {
 		if(e.getDocument() == title.getDocument()){
-			dialog.title = title.getText();
+			dialog.setTitle(title.getText());
 			model.reload(node);
 		}
 		if(e.getDocument() == area.getDocument()){
-			dialog.text = area.getText();
+			dialog.setText(area.getText());
 		}
-
-		DialogEditor.Instance.setEdited(true);
 	}
 	@Override
 	public void insertUpdate(DocumentEvent e) {

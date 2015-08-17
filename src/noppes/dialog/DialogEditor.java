@@ -17,7 +17,6 @@ public class DialogEditor extends JFrame{
 	public GuiDialogTree tree;
 	public GuiMenuBar menu;
 	public File activeFile;
-	private boolean isEdited = false;
 	
 	public DialogEditor(){
 		Instance = this;
@@ -29,7 +28,7 @@ public class DialogEditor extends JFrame{
 		this.add(BorderLayout.NORTH, new JScrollPane(tree = new GuiDialogTree(this)));
 		
 		this.setJMenuBar(menu = new GuiMenuBar(this));
-		this.setTitle("Load a <world>/customnpcs/dialog.dat file to get started");
+		this.setTitle("Load a <world>/customnpcs/dialogs folder to get started");
 	}
 	
 	public static void main(String[] args) {
@@ -39,33 +38,14 @@ public class DialogEditor extends JFrame{
 
 	public void load(File file) {
 		try {
+			if(!file.getAbsolutePath().endsWith("dialogs"))
+				return;
 			controller.loadCategories(file);
 			activeFile = file;
 			tree.refresh();
-			menu.enableSave();
 			setTitle(activeFile.getAbsolutePath());
-			setEdited(false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public void save(File file){
-		try {
-			controller.saveCategories(file);
-			activeFile = file;
-			setTitle(activeFile.getAbsolutePath());
-			System.out.println(activeFile.getAbsolutePath());
-			setEdited(false);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void setEdited(boolean bo){
-		if(isEdited == bo)
-			return;
-		isEdited = bo;
-		setTitle(activeFile.getAbsolutePath() + (isEdited?"*":""));
 	}
 }

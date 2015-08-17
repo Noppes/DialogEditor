@@ -1,47 +1,42 @@
 package noppes.dialog;
 
 import java.util.HashMap;
-
-import noppes.dialog.nbt.NBTTagCompound;
-import noppes.dialog.nbt.NBTTagList;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class DialogCategory {
+	public Json data = new Json.JsonMap();
+	public Map<Integer,Dialog> dialogs = new HashMap<Integer,Dialog>();
 
-	public int id = -1;
-	public String title = "New";
-	public HashMap<Integer,Dialog> dialogs;
-	public DialogCategory(){
-		dialogs = new HashMap<Integer, Dialog>();
+	public DialogCategory(Json data){
+		this.data = data;
+	}
+
+	public DialogCategory(){}
+	
+	public int getID(){
+		Json json = data.get("Slot");
+		if(json == null)
+			return -1;
+		return json.getInt();
+	}
+
+	public void setID(int id) {
+		data.put("Slot", id);
 	}
 	
-	public void readNBT(NBTTagCompound compound){
-        id = compound.getInteger("Slot");
-        title = compound.getString("Title");
-        
-        NBTTagList dialogsList = compound.getTagList("Dialogs", 10);
-        if(dialogsList != null){
-            for(int ii = 0; ii < dialogsList.tagCount(); ii++)
-            {
-            	Dialog dialog = new Dialog();
-            	dialog.category = this;
-            	dialog.readNBT(dialogsList.getCompoundTagAt(ii));
-            	dialogs.put(dialog.id, dialog);
-            }
-        }
+	public String getTitle(){
+		Json json = data.get("Title");
+		if(json == null)
+			return "New";
+		return json.getString();
 	}
 
-	public NBTTagCompound writeNBT(NBTTagCompound nbtfactions) {
-        nbtfactions.setInteger("Slot", id);
-        nbtfactions.setString("Title", title);
-        NBTTagList dialogs = new NBTTagList();
-        for(Dialog dialog : this.dialogs.values()){
-        	dialogs.appendTag(dialog.writeToNBT(new NBTTagCompound()));
-        }
-        nbtfactions.setTag("Dialogs", dialogs);
-        return nbtfactions;
+	public void setTitle(String title) {
+		data.put("Title", title);
 	}
 	
 	public String toString(){
-		return title;
+		return getTitle();
 	}
 }

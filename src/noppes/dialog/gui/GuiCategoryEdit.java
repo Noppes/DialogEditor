@@ -29,7 +29,7 @@ public class GuiCategoryEdit extends JTabbedPane implements FocusListener, Docum
 		this.category = category;
         JPanel panel = new JPanel(false);
         panel.add(new JLabel("Name"));
-        panel.add(title = new JTextField(category.title));
+        panel.add(title = new JTextField(category.getTitle()));
         title.setPreferredSize(new Dimension(300, 24));
         title.addFocusListener(this);
         title.getDocument().addDocumentListener(this);
@@ -43,15 +43,14 @@ public class GuiCategoryEdit extends JTabbedPane implements FocusListener, Docum
 	public void focusLost(FocusEvent e) {
 		if(e.getSource() == title){
 			DialogController.instance.saveCategory(category);
-			title.setText(category.title);
+			title.setText(category.getTitle());
 			model.reload(node);
 		}
 	}
 	@Override
 	public void changedUpdate(DocumentEvent arg0) {
-		category.title = title.getText();
+		category.setTitle(title.getText());
 		model.reload(node);
-		DialogEditor.Instance.setEdited(true);
 	}
 	@Override
 	public void insertUpdate(DocumentEvent arg0) {

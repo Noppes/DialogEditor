@@ -43,8 +43,8 @@ import noppes.dialog.DialogController;
 import noppes.dialog.DialogEditor;
 import noppes.dialog.DialogOption;
 import noppes.dialog.EnumNodeType;
-import noppes.dialog.nbt.CompressedStreamTools;
-import noppes.dialog.nbt.NBTTagCompound;
+import noppes.dialog.Json;
+import noppes.dialog.Json.JsonException;
 
 public class GuiDialogTree extends JScrollPane implements MouseListener, ActionListener, TreeSelectionListener, ClipboardOwner {
 	private DialogEditor editor;
@@ -95,7 +95,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 					for(Dialog dialog : category.dialogs.values()){
 						DefaultMutableTreeNode child = new DialogNode(dialog);
 						parent.add(child);
-						for(DialogOption option : dialog.options.values()){
+						for(DialogOption option : dialog.getOptions().values()){
 							child.add(new DialogNode(option));
 						}
 					}
@@ -121,6 +121,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		DialogNode node = getSelectedNode();
 		if(node == null)
 			return;
+		DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
 		if(node.type == EnumNodeType.CATEGORY){
 			DialogCategory category = (DialogCategory) node.getUserObject();
 			editor.add(BorderLayout.CENTER, component = new GuiCategoryEdit((DefaultTreeModel)tree.getModel(), node, category));
@@ -131,7 +132,8 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		}
 		else if(node.type == EnumNodeType.OPTION){
 			DialogOption option = (DialogOption) node.getUserObject();
-			editor.add(BorderLayout.CENTER, component = new GuiOptionEdit(tree, node, option));
+			Dialog dialog = (Dialog) parent.getUserObject();
+			editor.add(BorderLayout.CENTER, component = new GuiOptionEdit(tree, node, dialog, option));
 		}
 		editor.getContentPane().validate();
 		editor.repaint();
@@ -157,7 +159,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		
 		if(node.type == EnumNodeType.DIALOG){
 			Dialog dialog = (Dialog) node.getUserObject();
-			add.setVisible(dialog.options.size() < 6);
+			add.setVisible(dialog.getOptions().size() < 6);
 			copy.setVisible(true);
 			paste.setVisible(false);
 		}
@@ -187,30 +189,23 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 			if(node.type == EnumNodeType.CATEGORY){
 				DialogCategory category = (DialogCategory) node.getUserObject();
 				Dialog dialog = new Dialog();
-				editor.controller.saveDialog(category.id, dialog);
+				editor.controller.saveDialog(category.getID(), dialog);
 				selected = new DialogNode(dialog);
 				node.add(selected);
-				DialogEditor.Instance.setEdited(true);
 			}
 			else if(node.type == EnumNodeType.DIALOG){
 				Dialog dialog = (Dialog) node.getUserObject();
-				DialogOption option = new DialogOption();
-				for(int i = 0; i < 6; i++){
-					if(!dialog.options.containsKey(i)){
-						dialog.options.put(i, option);
-						break;
-					}
-				}
+				DialogOption option = new DialogOption(-1);
+				dialog.addOption(option);
+				editor.controller.saveDialog(dialog.category.getID(), dialog);
 				selected = new DialogNode(option);
 				node.add(selected);
-				DialogEditor.Instance.setEdited(true);
 			}
 			else if(node.type == EnumNodeType.ROOT){
 				DialogCategory category = new DialogCategory();
 				editor.controller.saveCategory(category);
 				selected = new DialogNode(category);
 				node.add(selected);
-				DialogEditor.Instance.setEdited(true);
 			}
 			((DefaultTreeModel)tree.getModel()).reload(node);	
 			tree.setSelectionPath(new TreePath(selected.getPath()));
@@ -222,22 +217,21 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 			DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
 			if(node.type == EnumNodeType.CATEGORY){
 				DialogCategory category = (DialogCategory) node.getUserObject();
-				editor.controller.removeCategory(category.id);
+				editor.controller.removeCategory(category.getID());
 				node.removeFromParent();
-				DialogEditor.Instance.setEdited(true);
 			}
 			if(node.type == EnumNodeType.DIALOG){
 				Dialog dialog = (Dialog) node.getUserObject();
 				editor.controller.removeDialog(dialog);
 				node.removeFromParent();
-				DialogEditor.Instance.setEdited(true);
 			}
 			if(node.type == EnumNodeType.OPTION){
-				DialogOption option = (DialogOption) node.getUserObject();
+				int id = ((DialogOption) node.getUserObject()).optionID;
 				Dialog dialog = (Dialog) parent.getUserObject();
-				dialog.options.values().remove(option);
+				dialog.removeOption(id);
+				editor.controller.saveDialog(dialog.category.getID(), dialog);
 				node.removeFromParent();
-				DialogEditor.Instance.setEdited(true);
+				
 			}
 			((DefaultTreeModel)tree.getModel()).reload(parent);	
 		}
@@ -263,31 +257,22 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 	}
 	
 	public boolean addCategory(DialogCategory category) {
-		if(editor.controller.categories.containsKey(category.id)){
-			category.id = editor.controller.getUniqueCategoryID();
+		if(editor.controller.categories.containsKey(category.getID())){
+			category.setID(editor.controller.getUniqueCategoryID());
 		}
-		if(editor.controller.containsCategoryName(category, category.title)){
+		if(editor.controller.containsCategoryName(category, category.getTitle())){
 			String[] buttons = {"Overwrite", "Change", "Cancel"};
 			int result = JOptionPane.showOptionDialog(this, category + "\nCategory found with the same namey", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
 			if(result == 0)
-				editor.controller.removeCategory(editor.controller.getCategoryFromName(category, category.title).id);
+				editor.controller.removeCategory(editor.controller.getCategoryFromName(category, category.getTitle()).getID());
 			if(result == 1){
-	    		while(editor.controller.containsCategoryName(category, category.title))
-	    			category.title += "_";
+	    		while(editor.controller.containsCategoryName(category, category.getTitle()))
+	    			category.setTitle(category.getTitle() + "_");
 			}
 			if(result == 2)
 				return false;
 		}
-		Set<Dialog> dialogs = new HashSet<Dialog>(category.dialogs.values());
-		category.dialogs.clear();
-		editor.controller.saveCategory(category);
-		
-		for(Dialog dialog : dialogs){
-			addDialog(category, dialog);
-		}
-		
-		
-		
+		editor.controller.saveCategory(category);		
 		return true;
 	}
 
@@ -303,19 +288,19 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 			if(result == 2)
 				return false;
 		}
-		if(editor.controller.containsDialogName(category, dialog, dialog.title)){
+		if(editor.controller.containsDialogName(category, dialog, dialog.getTitle())){
 			String[] buttons = {"Overwrite", "Change", "Cancel"};
 			int result = JOptionPane.showOptionDialog(this, dialog + "\nDialog found with the same name in this category", "Conflict warning", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[1]);
 			if(result == 0)
-				editor.controller.removeDialog(editor.controller.getDialogFromName(category, dialog, dialog.title));
+				editor.controller.removeDialog(editor.controller.getDialogFromName(category, dialog, dialog.getTitle()));
 			if(result == 1){
-	    		while(editor.controller.containsDialogName(category, dialog, dialog.title))
-	    			dialog.title += "_";
+	    		while(editor.controller.containsDialogName(category, dialog, dialog.getTitle()))
+	    			dialog.setTitle(dialog.getTitle() + "_");
 			}
 			if(result == 2)
 				return false;
 		}
-		DialogController.instance.saveDialog(category.id, dialog);
+		DialogController.instance.saveDialog(category.getID(), dialog);
 		return true;
 	}
 	
@@ -355,8 +340,9 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				type = EnumNodeType.CATEGORY;
 			else if(ob instanceof Dialog)
 				type = EnumNodeType.DIALOG;
-			else if(ob instanceof DialogOption)
+			else if(ob instanceof DialogOption){
 				type = EnumNodeType.OPTION;
+			}
 		}
 		@Override
 		public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
@@ -373,46 +359,35 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 
 		
 		public byte[] toBytes() throws IOException{
-			NBTTagCompound compound = null;
+			Json json = null;
 			if(type == EnumNodeType.CATEGORY){
-				compound = ((DialogCategory)getUserObject()).writeNBT(new NBTTagCompound());
+				json = ((DialogCategory)getUserObject()).data;
 			}
 			if(type == EnumNodeType.DIALOG){
-				compound = ((Dialog)getUserObject()).writeToNBT(new NBTTagCompound());
+				json = ((Dialog)getUserObject()).data.copy();
 			}
-			if(compound == null)
+			if(json == null)
 				return null;
 			
-			compound.setInteger("NodeType", type.ordinal());
-			
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream(stream);
-			
-			CompressedStreamTools.write(compound, oos);
-			oos.close();
-			return stream.toByteArray();
+			json.put("NodeType", type.ordinal());
+			return json.toBytes();
 		}
 		
-		public static DialogNode readFromBytes(byte[] bytes) throws IOException{
-			ByteArrayInputStream stream = new ByteArrayInputStream (bytes);
-			ObjectInputStream ois = new ObjectInputStream(stream);
-			
-			NBTTagCompound compound = CompressedStreamTools.read(ois);
-			
-			ois.close();
-			
-			if(!compound.hasKey("NodeType"))
+		public static DialogNode readFromBytes(byte[] bytes) throws IOException, JsonException{
+			if(bytes == null)
 				return null;
-			EnumNodeType type = EnumNodeType.values()[compound.getInteger("NodeType")];
+			Json json = Json.readFromBytes(bytes);
+			
+			if(!json.has("NodeType"))
+				return null;
+			EnumNodeType type = EnumNodeType.values()[json.get("NodeType").getInt()];
 
 			if(type == EnumNodeType.CATEGORY){
-				DialogCategory category = new DialogCategory();
-				category.readNBT(compound);
+				DialogCategory category = new DialogCategory(json);
 				return new DialogNode(category);
 			}
 			if(type == EnumNodeType.DIALOG){
-				Dialog dialog = new Dialog();
-				dialog.readNBT(compound);
+				Dialog dialog = new Dialog(json);
 				return new DialogNode(dialog);
 			}
 			return null;
@@ -436,7 +411,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 				e.printStackTrace();
 				return false;
 			}
-	        if(selected.type != EnumNodeType.DIALOG)
+	        if(selected == null || selected.type != EnumNodeType.DIALOG)
 	        	return false;
 			JTree.DropLocation dl = (JTree.DropLocation)support.getDropLocation();
 	        DialogNode node = (DialogNode) dl.getPath().getLastPathComponent();
@@ -459,8 +434,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
         	Dialog dialog = (Dialog) node.getUserObject();
 			DialogCategory category = (DialogCategory) parent.getUserObject();
         	if(this.tree.addDialog(category, dialog)){
-				this.tree.refresh();						
-	            DialogEditor.Instance.setEdited(true);
+				this.tree.refresh();					
 		        return true;
         	}
 	        return false;

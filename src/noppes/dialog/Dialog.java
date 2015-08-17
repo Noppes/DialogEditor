@@ -1,77 +1,105 @@
 package noppes.dialog;
 
 import java.util.HashMap;
-import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
 
-import noppes.dialog.nbt.NBTTagCompound;
-import noppes.dialog.nbt.NBTTagList;
 
-public class Dialog{
+public class Dialog{	
+	public Json data = new Json.JsonMap();
 	public int id = -1;
-	public String title = "New";
-	public String text = "";
-	public int quest = -1;
-	public DialogCategory category;
-	public HashMap<Integer,DialogOption> options = new HashMap<Integer,DialogOption>();
-	public String sound;
-	public String command = "";
+	public DialogCategory category = null;
+	private Map<Integer,DialogOption> options = null;
 	
-	private NBTTagCompound data = new NBTTagCompound();
+	public Dialog(Json data){
+		this.data = data;
+	}
 	
-	public void readNBT(NBTTagCompound compound) {		
-    	id = compound.getInteger("DialogId");
-    	title = compound.getString("DialogTitle");
-    	text = compound.getString("DialogText");
-    	quest = compound.getInteger("DialogQuest");
-    	sound = compound.getString("DialogSound");
-		command = compound.getString("DialogCommand");
-    	
-		NBTTagList options = compound.getTagList("Options", 10);
-		HashMap<Integer,DialogOption> newoptions = new HashMap<Integer,DialogOption>();
-		for(int iii = 0; iii < options.tagCount();iii++){
-            NBTTagCompound option = options.getCompoundTagAt(iii);
-            int opslot = option.getInteger("OptionSlot");
-            DialogOption dia = new DialogOption();
-            dia.readNBT(option.getCompoundTag("Option"));
-            dia.id = opslot;
-            newoptions.put(opslot, dia);
-		}
-		this.options = newoptions;
-		this.data = compound;
+	public Dialog(){}
+	
+	public String getTitle(){
+		Json json = data.get("DialogTitle");
+		if(json == null)
+			return "";
+		return json.getString();
 	}
 
-	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-		Set<String> keys = data.func_150296_c();
-		for(String key : keys){
-			compound.setTag(key, data.getTag(key));
-		}
-		compound.setInteger("DialogId", id);
-		compound.setString("DialogTitle", title);
-		compound.setString("DialogText", text);
-		compound.setInteger("DialogQuest", quest);
-		compound.setString("DialogCommand", command);
-		if(sound != null && !sound.isEmpty())
-			compound.setString("DialogSound", sound);
-
-		NBTTagList options = new NBTTagList();
-		for(int opslot : this.options.keySet()){
-			NBTTagCompound listcompound = new NBTTagCompound();
-			listcompound.setInteger("OptionSlot", opslot);
-			listcompound.setTag("Option", this.options.get(opslot).writeNBT());
-			options.appendTag(listcompound);
-		}
-		compound.setTag("Options", options);
-		return compound;
+	public void setTitle(String title) {
+		data.put("DialogTitle", title);
+	}
+	
+	public String getText(){
+		Json json = data.get("DialogText");
+		if(json == null)
+			return "New";
+		return json.getString();
 	}
 
-	public boolean hasOtherOptions() {
-		for(DialogOption option: options.values())
-			if(option != null && option.optionType != EnumOptionType.Disabled)
-				return true;
-		return false;
-	}	
+	public void setText(String title) {
+		data.put("DialogText", title);
+	}
+	
+	public Map<Integer,DialogOption> getOptions(){
+		if(options != null)
+			return options;
+		Map<Integer,DialogOption> options = new HashMap<Integer,DialogOption>();
+		Json json = data.get("Options");
+		if(json == null)
+			return options;
+		for(Json entry : json.getList()){
+			try{
+				int id = entry.get("OptionSlot").getInt();
+	            DialogOption option = new DialogOption(entry.get("Option"), id);
+	            options.put(id, option);
+			}
+			catch(NumberFormatException ex){
+				
+			}
+		}
+		this.options = options;
+		return options;
+	}
+	
+	public void setOptions(Map<Integer, DialogOption> options){
+		this.options = options;
+		Json list = new Json.JsonList();
+		for(Entry<Integer, DialogOption> entry : options.entrySet()){
+			Json json = new Json.JsonMap();
+			json.put("OptionSlot", entry.getKey());
+			json.put("Option", entry.getValue().data);
+			list.add(json);
+		}
+		data.put("Options", list);
+	}
+
+	public void setOption(int id, DialogOption option) {
+		Map<Integer,DialogOption> options = getOptions();
+		options.put(id, option);
+		setOptions(options);
+	}
+
+	public int addOption(DialogOption option) {
+		Map<Integer,DialogOption> options = getOptions();
+		for(int i = 0; i < 6; i++){
+			if(!options.containsKey(i)){
+				options.put(i, option);
+				option.optionID = i;
+				setOptions(options);
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	public void removeOption(int id) {
+		Map<Integer,DialogOption> options = getOptions();
+		options.remove(id);
+		setOptions(options);
+	}
 	
 	public String toString(){
-		return title + " : " + id;
+		return getTitle() + " : " + id;
 	}
+	
+
 }
