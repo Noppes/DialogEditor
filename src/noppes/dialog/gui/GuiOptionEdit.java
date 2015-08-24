@@ -28,22 +28,30 @@ import noppes.dialog.gui.GuiDialogTree.DialogNode;
 
 public class GuiOptionEdit extends JTabbedPane implements FocusListener, DocumentListener, ActionListener{
 	private DialogOption option;
-	private Dialog dialog;
 	private JTextField title;
-	private JComboBox position;
+	private JComboBox<String> position;
+	private JComboBox<String> type;
+	private JTextField dialog;
+	private JTextField color;
 	
 	private DefaultMutableTreeNode node;
 	private DefaultTreeModel model;
 	private JTree tree;
+	private JPanel panel;
 	
-	public GuiOptionEdit(JTree tree, DefaultMutableTreeNode node, Dialog dialog, DialogOption option){
+	public GuiOptionEdit(JTree tree, DefaultMutableTreeNode node, DialogOption option){
 		this.node = node;
 		this.tree = tree;
 		this.model = (DefaultTreeModel) tree.getModel();
 		this.option = option;
-		this.dialog = dialog;
-        JPanel panel = new JPanel(new GridBagLayout());       
+        panel = new JPanel(new GridBagLayout());      
+        addTab("Option", panel);
         
+        init();
+	}
+	
+	private void init(){
+        panel.removeAll();
         GridBagConstraints gbc = new GridBagConstraints();
         
         gbc.gridx = 0;
@@ -51,36 +59,81 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
         panel.add(new JLabel("Name"), gbc);
         gbc.gridx = 1;
         panel.add(title = new JTextField(option.getTitle()), gbc);
-        
         title.setPreferredSize(new Dimension(300, 24));
         title.addFocusListener(this);
         title.getDocument().addDocumentListener(this);
 
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy++;
         panel.add(new JLabel("Position"), gbc);
         gbc.gridx = 1;
-        panel.add(position = new JComboBox(new String[]{"0", "1", "2", "3", "4", "5"}), gbc);
+        panel.add(position = new JComboBox<String>(new String[]{"0", "1", "2", "3", "4", "5"}), gbc);
         position.setSelectedIndex(option.optionID);
-        position.setEditable(true);
+        position.setPreferredSize(new Dimension(100, 24));
+        position.setEditable(false);
         position.addActionListener(this);
-        
-        addTab("Option", panel);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Type"), gbc);
+        gbc.gridx = 1;
+        panel.add(type = new JComboBox<String>(new String[]{"Quit", "Dialog", "Disabled", "Role", "Command"}), gbc);
+        type.setSelectedIndex(option.getType());
+        type.setPreferredSize(new Dimension(100, 24));
+        type.setEditable(false);
+        type.addActionListener(this);
+
+        if(option.getType() == 1){
+            gbc.gridx = 0;
+            gbc.gridy++;
+            panel.add(new JLabel("Dialog ID"), gbc);
+            gbc.gridx = 1;
+            panel.add(dialog = new JTextField(option.getDialogID() + ""), gbc);
+            dialog.setPreferredSize(new Dimension(300, 24));
+            dialog.addFocusListener(this);
+            dialog.getDocument().addDocumentListener(this);
+        }
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        panel.add(new JLabel("Color"), gbc);
+        gbc.gridx = 1;
+        panel.add(color = new JTextField(option.getColorHex()), gbc);
+        color.setPreferredSize(new Dimension(300, 24));
+        color.addFocusListener(this);
+        color.getDocument().addDocumentListener(this);
+
+        panel.repaint();
+        panel.revalidate();
 	}
+	
 	@Override
 	public void focusGained(FocusEvent e) {
 		
 	}
 	@Override
 	public void focusLost(FocusEvent e) {
-		if(e.getSource() == title){
-			
+		if(e.getSource() == dialog){
+			try{
+				option.setDialogID(Integer.parseInt(dialog.getText()));
+				save();
+			}
+			catch(NumberFormatException ex){}
+			init();
+		}
+		if(e.getSource() == color){
+			try{
+				option.setColorHex(color.getText());
+				save();
+			}
+			catch(NumberFormatException ex){}
+			init();
 		}
 	}
 	@Override
 	public void changedUpdate(DocumentEvent arg0) {
 		option.setTitle(title.getText());
-		DialogController.instance.saveDialog(dialog.category.getID(), dialog);
+		save();
 		model.reload(node);
 	}
 	@Override
@@ -107,10 +160,22 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
 			option.optionID = index;
 			options.put(index, option);
 			dialog.setOptions(options);
-			DialogController.instance.saveDialog(dialog.category.getID(), dialog);
+			save();
 			
 			model.reload(parent);
 			tree.setSelectionPath(new TreePath(node.getPath()));
 		}
+		if(e.getSource() == type){
+			DialogOption option = (DialogOption) node.getUserObject();
+			option.setType(type.getSelectedIndex());
+			save();
+			init();
+		}
+	}
+	
+	private void save(){
+		DialogNode parent = (DialogNode)node.getParent();
+		Dialog dialog = (Dialog) parent.getUserObject();
+		DialogController.instance.saveDialog(dialog.category.getID(), dialog);
 	}
 }

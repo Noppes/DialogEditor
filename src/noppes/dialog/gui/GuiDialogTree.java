@@ -1,6 +1,8 @@
 package noppes.dialog.gui;
 
 import java.awt.BorderLayout;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -10,16 +12,11 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.swing.DropMode;
 import javax.swing.JComponent;
@@ -132,8 +129,7 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		}
 		else if(node.type == EnumNodeType.OPTION){
 			DialogOption option = (DialogOption) node.getUserObject();
-			Dialog dialog = (Dialog) parent.getUserObject();
-			editor.add(BorderLayout.CENTER, component = new GuiOptionEdit(tree, node, dialog, option));
+			editor.add(BorderLayout.CENTER, component = new GuiOptionEdit(tree, node, option));
 		}
 		editor.getContentPane().validate();
 		editor.repaint();
@@ -176,7 +172,9 @@ public class GuiDialogTree extends JScrollPane implements MouseListener, ActionL
 		else if(node.type == EnumNodeType.CATEGORY){
 			paste.setEnabled(copied != null && copied.type == EnumNodeType.DIALOG);
 		}
-		menu.show(this, e.getX(), e.getY());
+		Point p = MouseInfo.getPointerInfo().getLocation();
+		SwingUtilities.convertPointFromScreen(p, this);
+		menu.show(this, p.x, p.y);
 	}
 
 	@Override

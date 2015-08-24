@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -28,7 +31,7 @@ public class DialogEditor extends JFrame{
 		this.add(BorderLayout.NORTH, new JScrollPane(tree = new GuiDialogTree(this)));
 		
 		this.setJMenuBar(menu = new GuiMenuBar(this));
-		this.setTitle("Load a <world>/customnpcs/dialogs folder to get started");
+		this.setTitle("Load a <world> folder to get started");
 	}
 	
 	public static void main(String[] args) {
@@ -37,8 +40,29 @@ public class DialogEditor extends JFrame{
 	}
 
 	public void load(File file) {
+		if(file.getAbsolutePath().endsWith("dialogs")){
+			start(file);
+			return;
+		}
+		List<String> list = Arrays.asList(file.list());
+		if(list.contains("dialogs")){
+			start(new File(file, "dialogs"));
+			return;
+		}
+
+		if(list.contains("customnpcs")){
+			file = new File(file, "customnpcs");
+			list = Arrays.asList(file.list());
+			if(list.contains("dialogs")){
+				start(new File(file, "dialogs"));
+				return;
+			}
+		}
+	}
+	
+	private void start(File file){
 		try {
-			if(!file.getAbsolutePath().endsWith("dialogs"))
+			if(!file.isDirectory())
 				return;
 			controller.loadCategories(file);
 			activeFile = file;
@@ -47,5 +71,6 @@ public class DialogEditor extends JFrame{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 	}
 }

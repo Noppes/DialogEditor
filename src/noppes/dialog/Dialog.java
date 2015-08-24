@@ -20,7 +20,7 @@ public class Dialog{
 	public String getTitle(){
 		Json json = data.get("DialogTitle");
 		if(json == null)
-			return "";
+			return "New";
 		return json.getString();
 	}
 
@@ -31,7 +31,7 @@ public class Dialog{
 	public String getText(){
 		Json json = data.get("DialogText");
 		if(json == null)
-			return "New";
+			return "";
 		return json.getString();
 	}
 
