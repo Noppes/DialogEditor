@@ -21,8 +21,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import com.inet.jortho.SpellChecker;
+
 import noppes.dialog.Dialog;
 import noppes.dialog.DialogController;
+import noppes.dialog.DialogEditor;
 import noppes.dialog.DialogOption;
 import noppes.dialog.gui.GuiDialogTree.DialogNode;
 
@@ -39,6 +42,8 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
 	private JTree tree;
 	private JPanel panel;
 	
+	private boolean isTesting = true;
+	
 	public GuiOptionEdit(JTree tree, DefaultMutableTreeNode node, DialogOption option){
 		this.node = node;
 		this.tree = tree;
@@ -54,6 +59,9 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
         panel.removeAll();
         GridBagConstraints gbc = new GridBagConstraints();
         
+        if(isTesting) SpellChecker.registerDictionaries(DialogEditor.class.getResource("dict/"), null);
+		else SpellChecker.registerDictionaries(DialogEditor.class.getResource("/src/noppes/dialog/dict/"), null);
+        
         gbc.gridx = 0;
         gbc.gridy = 0;
         panel.add(new JLabel("Name"), gbc);
@@ -62,7 +70,8 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
         title.setPreferredSize(new Dimension(300, 24));
         title.addFocusListener(this);
         title.getDocument().addDocumentListener(this);
-
+        SpellChecker.register(title);
+        
         gbc.gridx = 0;
         gbc.gridy++;
         panel.add(new JLabel("Position"), gbc);
