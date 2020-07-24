@@ -7,10 +7,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import noppes.dialog.gui.GuiDialogTree;
 import noppes.dialog.gui.GuiMenuBar;
@@ -29,6 +28,7 @@ public class DialogEditor extends JFrame{
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
 		setResizable(true);
+		setIconImage(new ImageIcon(Dialog.class.getResource("img/1127987.png")).getImage());
 		this.add(BorderLayout.NORTH, new JScrollPane(tree = new GuiDialogTree(this)));
 		
 		this.setJMenuBar(menu = new GuiMenuBar(this));
