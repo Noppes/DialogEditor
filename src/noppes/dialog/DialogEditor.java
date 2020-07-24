@@ -4,12 +4,16 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import com.inet.jortho.FileUserDictionary;
+import com.inet.jortho.SpellChecker;
 
 import noppes.dialog.gui.GuiDialogTree;
 import noppes.dialog.gui.GuiMenuBar;
@@ -22,17 +26,20 @@ public class DialogEditor extends JFrame{
 	public File activeFile;
 	
 	public DialogEditor(){
+		try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}
+		catch (ClassNotFoundException | InstantiationException | IllegalAccessException| UnsupportedLookAndFeelException e) {e.printStackTrace();}
+		
 		Instance = this;
 		setSize(800, 600);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
-		setResizable(false);
+		setResizable(true);
 		this.add(BorderLayout.NORTH, new JScrollPane(tree = new GuiDialogTree(this)));
 		
 		this.setJMenuBar(menu = new GuiMenuBar(this));
 		this.setTitle("Load a <world> folder to get started");
-	}
+	} 
 	
 	public static void main(String[] args) {
 		DialogEditor editor = new DialogEditor();
