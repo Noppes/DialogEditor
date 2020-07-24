@@ -23,9 +23,6 @@ public class DialogEditor extends JFrame{
 	public File activeFile;
 	
 	public DialogEditor(){
-		try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}
-		catch (ClassNotFoundException | InstantiationException | IllegalAccessException| UnsupportedLookAndFeelException e) {e.printStackTrace();}
-		
 		Instance = this;
 		setSize(800, 600);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
