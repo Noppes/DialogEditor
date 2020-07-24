@@ -57,6 +57,7 @@ public class GuiDialogEdit extends JTabbedPane implements FocusListener, Documen
 		area.getDocument().addDocumentListener(this);
 		this.setSelectedIndex(tabIndex);
 		this.addChangeListener(this);
+		requestFocus();
 
 	}
 

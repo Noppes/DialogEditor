@@ -53,6 +53,7 @@ public class GuiOptionEdit extends JTabbedPane implements FocusListener, Documen
         addTab("Option", panel);
         
         init();
+        requestFocus();
 	}
 	
 	private void init(){
