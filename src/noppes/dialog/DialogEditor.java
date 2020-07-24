@@ -4,10 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
@@ -27,12 +27,13 @@ public class DialogEditor extends JFrame{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
-		setResizable(false);
+		setResizable(true);
+		setIconImage(new ImageIcon(Dialog.class.getResource("img/1127987.png")).getImage());
 		this.add(BorderLayout.NORTH, new JScrollPane(tree = new GuiDialogTree(this)));
 		
 		this.setJMenuBar(menu = new GuiMenuBar(this));
 		this.setTitle("Load a <world> folder to get started");
-	}
+	} 
 	
 	public static void main(String[] args) {
 		DialogEditor editor = new DialogEditor();

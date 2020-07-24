@@ -1,4 +1,6 @@
-Install the java 8 JDK then run
-   gradlew build
+Install maven and run
+```
+mvn package
+```
 
-resulting jar will be in the \build\libs directory
+resulting jar will be in targets subdir

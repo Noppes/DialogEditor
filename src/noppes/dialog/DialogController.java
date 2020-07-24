@@ -6,9 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import javax.security.auth.login.LoginException;
-
-
 public class DialogController {
 	public HashMap<Integer,DialogCategory> categories = new HashMap<Integer, DialogCategory>();
 	public HashMap<Integer,Dialog> dialogs = new HashMap<Integer, Dialog>();
