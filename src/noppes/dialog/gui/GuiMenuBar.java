@@ -17,6 +17,7 @@ import noppes.dialog.DialogEditor;
 public class GuiMenuBar extends JMenuBar implements ActionListener{
 	private JMenuItem itemLoad;
 	private JMenuItem itemExit;
+	private JMenuItem saveItem;
 	private DialogEditor editor;
 	
 	final JFileChooser fileChooser = new JFileChooser();
@@ -34,6 +35,11 @@ public class GuiMenuBar extends JMenuBar implements ActionListener{
 		itemLoad.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.CTRL_MASK));
 		itemLoad.addActionListener(this);
 		menu.add(itemLoad);
+		
+		saveItem = new JMenuItem("Save", KeyEvent.VK_S);
+		saveItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+		saveItem.addActionListener(this);
+		menu.add(saveItem);
 		
 		menu.addSeparator();
 		itemExit = new JMenuItem("Exit");
@@ -87,6 +93,9 @@ public class GuiMenuBar extends JMenuBar implements ActionListener{
                 File file = fileChooser.getSelectedFile();
             	editor.load(file);
             }
+		}
+		if(e.getSource() == saveItem) {
+			if(GuiDialogEdit.dialogInstance != null) GuiDialogEdit.dialogInstance.saveDialouge();
 		}
 	}
 }

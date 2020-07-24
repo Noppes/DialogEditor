@@ -12,9 +12,6 @@ import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import com.inet.jortho.FileUserDictionary;
-import com.inet.jortho.SpellChecker;
-
 import noppes.dialog.gui.GuiDialogTree;
 import noppes.dialog.gui.GuiMenuBar;
 
